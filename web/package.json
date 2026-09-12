@@ -1,0 +1,32 @@
+{
+  "name": "jakaes-room",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "test": "node --experimental-strip-types tests/life.test.ts && node --experimental-strip-types tests/behavior.test.ts && node tests/sprites.test.mjs",
+    "predev": "node scripts/prepare-sprites.mjs",
+    "prebuild": "node scripts/prepare-sprites.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.0",
+    "@react-three/fiber": "^9.3.0",
+    "next": "^15.5.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "^4.2.0",
+    "@gltf-transform/extensions": "^4.2.0",
+    "@gltf-transform/functions": "^4.2.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/three": "^0.180.0",
+    "sharp": "^0.34.0",
+    "typescript": "^5.9.0"
+  }
+}

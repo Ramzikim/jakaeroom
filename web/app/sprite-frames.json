@@ -1,0 +1,494 @@
+{
+  "backwalk_left": [
+    {
+      "url": "/jakae_sprite/jakae_backwalk_left_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_left_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_left_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_left_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 554
+    }
+  ],
+  "backwalk_right": [
+    {
+      "url": "/jakae_sprite/jakae_backwalk_right_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_right_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_right_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_backwalk_right_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 554
+    }
+  ],
+  "bath": [
+    {
+      "url": "/jakae_sprite/jakae_bath_01.png",
+      "number": 1,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_02.png",
+      "number": 2,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_03.png",
+      "number": 3,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_04.png",
+      "number": 4,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_05.png",
+      "number": 5,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_06.png",
+      "number": 6,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_07.png",
+      "number": 7,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_08.png",
+      "number": 8,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_09.png",
+      "number": 9,
+      "width": 468,
+      "height": 428
+    },
+    {
+      "url": "/jakae_sprite/jakae_bath_10.png",
+      "number": 10,
+      "width": 468,
+      "height": 428
+    }
+  ],
+  "hop": [
+    {
+      "url": "/jakae_sprite/jakae_hop_01.png",
+      "number": 1,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_02.png",
+      "number": 2,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_03.png",
+      "number": 3,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_04.png",
+      "number": 4,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_05.png",
+      "number": 5,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_06.png",
+      "number": 6,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_07.png",
+      "number": 7,
+      "width": 426,
+      "height": 716
+    },
+    {
+      "url": "/jakae_sprite/jakae_hop_08.png",
+      "number": 8,
+      "width": 426,
+      "height": 716
+    }
+  ],
+  "idle": [
+    {
+      "url": "/jakae_sprite/jakae_idle_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_05.png",
+      "number": 5,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_06.png",
+      "number": 6,
+      "width": 384,
+      "height": 512
+    },
+    {
+      "url": "/jakae_sprite/jakae_idle_07.png",
+      "number": 7,
+      "width": 384,
+      "height": 512
+    }
+  ],
+  "shy": [
+    {
+      "url": "/jakae_sprite/jakae_shy_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_05.png",
+      "number": 5,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_06.png",
+      "number": 6,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_07.png",
+      "number": 7,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_08.png",
+      "number": 8,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_09.png",
+      "number": 9,
+      "width": 384,
+      "height": 584
+    },
+    {
+      "url": "/jakae_sprite/jakae_shy_10.png",
+      "number": 10,
+      "width": 384,
+      "height": 584
+    }
+  ],
+  "sit_idle": [
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_01.png",
+      "number": 1,
+      "width": 440,
+      "height": 522
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_02.png",
+      "number": 2,
+      "width": 440,
+      "height": 522
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_03.png",
+      "number": 3,
+      "width": 440,
+      "height": 522
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_04.png",
+      "number": 4,
+      "width": 440,
+      "height": 522
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_05.png",
+      "number": 5,
+      "width": 440,
+      "height": 522
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_idle_06.png",
+      "number": 6,
+      "width": 440,
+      "height": 522
+    }
+  ],
+  "sit_sleeploop": [
+    {
+      "url": "/jakae_sprite/jakae_sit_sleeploop_01.png",
+      "number": 1,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_sleeploop_02.png",
+      "number": 2,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_sleeploop_03.png",
+      "number": 3,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_sleeploop_04.png",
+      "number": 4,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_sleeploop_05.png",
+      "number": 5,
+      "width": 578,
+      "height": 494
+    }
+  ],
+  "sit_snooze": [
+    {
+      "url": "/jakae_sprite/jakae_sit_snooze_01.png",
+      "number": 1,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_snooze_02.png",
+      "number": 2,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_snooze_03.png",
+      "number": 3,
+      "width": 578,
+      "height": 494
+    },
+    {
+      "url": "/jakae_sprite/jakae_sit_snooze_04.png",
+      "number": 4,
+      "width": 578,
+      "height": 494
+    }
+  ],
+  "strawberry": [
+    {
+      "url": "/jakae_sprite/jakae_strawberry_01.png",
+      "number": 1,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_02.png",
+      "number": 2,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_03.png",
+      "number": 3,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_04.png",
+      "number": 4,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_05.png",
+      "number": 5,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_06.png",
+      "number": 6,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_07.png",
+      "number": 7,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_08.png",
+      "number": 8,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_09.png",
+      "number": 9,
+      "width": 408,
+      "height": 458
+    },
+    {
+      "url": "/jakae_sprite/jakae_strawberry_10.png",
+      "number": 10,
+      "width": 408,
+      "height": 458
+    }
+  ],
+  "walk_left": [
+    {
+      "url": "/jakae_sprite/jakae_walk_left_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_left_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_left_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_left_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_left_05.png",
+      "number": 5,
+      "width": 384,
+      "height": 554
+    }
+  ],
+  "walk_right": [
+    {
+      "url": "/jakae_sprite/jakae_walk_right_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_right_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_right_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_right_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_walk_right_05.png",
+      "number": 5,
+      "width": 384,
+      "height": 554
+    }
+  ]
+}

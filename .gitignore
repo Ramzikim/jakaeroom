@@ -1,0 +1,16 @@
+# Publish the web app and its authoritative sprite inputs only.
+/*
+!/.gitignore
+!/README.md
+!/web/
+!/jakae_sprite/
+/jakae_sprite/*
+!/jakae_sprite/png/
+**/node_modules/
+**/.next/
+**/.next-dev/
+**/.vercel/
+**/.env*
+**/*.tsbuildinfo
+/web/validation/
+/web/*inventory.json

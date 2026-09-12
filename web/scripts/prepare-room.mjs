@@ -1,0 +1,40 @@
+import {finishProps} from './finish-props.mjs';
+import { NodeIO, getBounds } from '@gltf-transform/core';
+import { ALL_EXTENSIONS, EXTTextureWebP } from '@gltf-transform/extensions';
+import { dedup, prune, join, weld, meshopt } from '@gltf-transform/functions';
+import {MeshoptEncoder} from 'meshoptimizer';
+import {spawnSync} from 'node:child_process';
+import fs from 'node:fs/promises';
+
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.encoder':MeshoptEncoder});
+const doc = await io.read('public/models/room.glb');
+const removed = new Set(['LOUNGE_SoftCushion','DEN_LoungePinkThrow','DEN_BedSmallDotCushion','DEN_SnackSidePot','DEN_SnackSideSoil','DEN_SnackSideFoliage']);
+for (const node of doc.getRoot().listNodes()) {
+ if (removed.has(node.getName())) node.dispose();
+ if (['PH3_TV_Screen','PH3_TV_Body'].includes(node.getName())) {
+  const black=doc.createMaterial('TV_WarmGray').setBaseColorFactor([.12,.11,.10,1]).setRoughnessFactor(.85).setMetallicFactor(0);
+  for(const primitive of node.getMesh().listPrimitives()) primitive.setMaterial(black);
+ }
+}
+
+finishProps(doc);
+
+// Blender scene bookkeeping is authoring metadata, not runtime content.
+for (const scene of doc.getRoot().listScenes()) scene.setExtras({});
+const bounds = Object.fromEntries(doc.getRoot().listNodes().filter(n => /^PH1_|^PH3_/.test(n.getName())).map(n => [n.getName(), getBounds(n)]));
+await fs.writeFile('room-bounds.json', JSON.stringify(bounds, null, 2));
+await doc.transform(dedup(), weld());
+for (const tex of doc.getRoot().listTextures()) {
+  const result = spawnSync(process.env.JAKAE_PYTHON || 'C:/Users/bitku/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe', ['-c', 'from PIL import Image; import sys,io; im=Image.open(io.BytesIO(sys.stdin.buffer.read())); im.thumbnail((1024,1024)); im.save(sys.stdout.buffer,format="WEBP",quality=88)'], {input:tex.getImage(),maxBuffer:20*1024*1024});
+  if(result.status!==0) throw new Error(result.stderr.toString());
+  tex.setImage(result.stdout).setMimeType('image/webp');
+}
+doc.createExtension(EXTTextureWebP).setRequired(true);
+await MeshoptEncoder.ready;
+await doc.transform(join(), prune(), meshopt({encoder:MeshoptEncoder,level:'medium'}));
+await io.write('public/models/room-web.glb', doc);
+console.log('Runtime room:', (await fs.stat('public/models/room-web.glb')).size, 'bytes;', doc.getRoot().listMeshes().length, 'meshes');
+
+
+
+
