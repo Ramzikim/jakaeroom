@@ -33,7 +33,7 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
     if(!response.ok)throw new Error(body.error);
     const guest=readGuest();
     if(!body.profile&&guest){response=await fetch('/api/profile',{method:'PUT',headers:{...headers,'Content-Type':'application/json','X-Guest-Migration':'1'},body:JSON.stringify(parseProfile(guest)),signal:abort.signal});body=await response.json();if(!response.ok)throw new Error(body.error);}
-    if(!abort.signal.aborted){setProfile(body.profile);setLoaded(true);}
+    if(!abort.signal.aborted){if(body.profile&&guest){try{localStorage.removeItem(guestKey);}catch{}}setProfile(body.profile);setLoaded(true);}
    }catch(e){if(!abort.signal.aborted)setError(e instanceof Error?e.message:'계정 프로필을 불러오지 못했어요.');}
   }
   void restore();return()=>abort.abort();
@@ -67,16 +67,16 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
  }
  return <Context.Provider value={profile}>{children}<aside className="profile-control" aria-label="내 프로필">
   <button ref={edit} onClick={open}>{profile?`${profile.nickname} · ${profile.vocative}`:'이름 정하기'}</button>
-  {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>Google로 로그인</button>}
+  {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>로그인하고 저장하기</button>}
   <span className="profile-notice" role="status">{notice}</span>
   {!dialog.current?.open&&error&&<span className="profile-error" role="alert">{error}</span>}
  </aside>
  <dialog ref={dialog} className="profile-dialog" onCancel={close} onClose={()=>edit.current?.focus()}>
   <form key={profile?.updatedAt||'new'} ref={form} onSubmit={save}>
    <h2>작애가 뭐라고 부를지 정해줘!</h2><p>로그인 없이도 놀 수 있어. 로그인하면 이름을 계정에 저장해!</p>
-   <label>이름 / 별명<input name="nickname" autoComplete="nickname" placeholder="유진" maxLength={20} required defaultValue={profile?.nickname||''}/></label>
+   <label>이름 / 별명<input name="nickname" autoComplete="nickname" placeholder="작애에게 불리고 싶은 이름을 적어줘" maxLength={20} required defaultValue={profile?.nickname||''}/></label>
    <fieldset><legend>성별 <small>작애가 부를 호칭에만 사용해요.</small></legend><label><input type="radio" name="gender" value="female" required defaultChecked={profile?.gender==='female'}/>여성</label><label><input type="radio" name="gender" value="male" required defaultChecked={profile?.gender==='male'}/>남성</label></fieldset>
-   <label>태어난 연도<input name="birthYear" inputMode="numeric" type="number" min={kstYear()-120} max={kstYear()} step={1} placeholder="1996" required defaultValue={profile?.birthYear||''}/></label>
+   <label>태어난 연도<input name="birthYear" inputMode="numeric" type="number" min={kstYear()-120} max={kstYear()} step={1} required defaultValue={profile?.birthYear??2000}/></label>
    {error&&<p role="alert" className="profile-error">{error}</p>}
    <div className="profile-actions"><button type="button" onClick={close}>나중에 할게</button><button type="submit" disabled={saving}>{saving?'저장 중…':'이렇게 불러줘'}</button></div>
   </form>

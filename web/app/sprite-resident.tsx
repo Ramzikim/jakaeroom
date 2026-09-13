@@ -4,6 +4,7 @@ import {useFrame,useThree} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
 import {useProfileDialogue} from './profile-ui';
+import {placeBubble} from './bubble-layout';
 import frames from './sprite-frames.json';
 import {animationFps,createLife,commandLife,tickLife,locked,RULES,type Action,type Band,type Sequence} from './behavior';
 import type {Mood} from './life';
@@ -19,6 +20,9 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
  const life=useRef(createLife()),seenCommand=useRef<number|null>(null),lastMood=useRef<Mood>('idle');
  const [speech,setSpeech]=useState(life.current.speech);
+ const bubble=useRef<HTMLDivElement>(null);
+ const [testSpeech,setTestSpeech]=useState<string|null>(null);
+ useEffect(()=>{if(process.env.NODE_ENV==='development')setTestSpeech(new URLSearchParams(location.search).get('speech'));},[]);
  useEffect(()=>{onReady();},[textures,onReady]);
  useEffect(()=>{if(command&&command.id!==seenCommand.current){seenCommand.current=command.id;commandLife(life.current,command.action);}},[command]);
  useFrame((_,delta)=>{
@@ -49,7 +53,16 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
     shader.vertexShader=shader.vertexShader.replace('mvPosition.xy += rotatedPosition;', 'mvPosition.xy += rotatedPosition; mvPosition.z += rotatedPosition.y * 0.6125;');
    }}/>
   </sprite>
-  {speech&&<Html position={[0,1.65,0]} center zIndexRange={[20,0]} style={{pointerEvents:'none'}}><div className="bubble">{dialogue(speech)}</div></Html>}
+  {(testSpeech||speech)&&<Html zIndexRange={[20,0]} style={{pointerEvents:'none'}} calculatePosition={(_,camera,size)=>{
+   const character=sprite.current,element=bubble.current;if(!character||!carrier.current||!element)return [0,-1000];
+   const point=carrier.current.position.clone().project(camera),zoom=(camera as T.OrthographicCamera).zoom;
+   const x=(point.x+1)*size.width/2,y=(1-point.y)*size.height/2;
+   const bounds={left:x-character.center.x*character.scale.x*zoom,right:x+(1-character.center.x)*character.scale.x*zoom,top:y-(1-character.center.y)*character.scale.y*zoom,bottom:y+character.center.y*character.scale.y*zoom};
+   const position=placeBubble(bounds,element.offsetWidth,element.offsetHeight,size.width,size.height);
+   element.style.visibility=position.visible?'visible':'hidden';
+   if(process.env.NODE_ENV==='development')element.dataset.spriteBounds=JSON.stringify(bounds);
+   return [position.x,position.y];
+  }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
 

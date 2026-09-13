@@ -35,7 +35,14 @@ body,button,select,input,textarea{font-family:Paperlogy,'Malgun Gothic',sans-ser
 .clock{font-size:13px}.clock time{font-size:14px}.clock small{font-size:10px}
 @media(max-width:600px){.image-title img{width:192.5px}.clock{font-size:10px}.clock time{font-size:12px}.image-controls img{width:58px}.image-dock img{width:110%;max-width:24.2vw}.dock.image-dock{gap:0}.dock.image-dock button+button{margin-left:-2px}.action-extras{font-size:10px;gap:8px}}
 
-.view-controls.image-controls{gap:7px}
+.view-controls.image-controls{gap:7px;column-gap:0}.view-controls.image-controls>button:nth-child(2){margin-left:-8px}
+.view-controls.image-controls .bgm-toggle{transform:translateY(-20px)}
+.profile-control.profile-control{top:132px}
+.profile-dialog h2{color:#4A4542;transform:translateY(-12px)}
+.profile-dialog form>p:first-of-type{transform:translateY(-20px)}
+.profile-dialog input::placeholder{color:#a9a19b;opacity:1}
+.bubble.bubble{max-width:calc(8em + 26px);padding:9px 13px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty}
+@media(max-width:600px){.profile-control.profile-control{top:116px}.bubble.bubble{max-width:calc(8em + 20px);padding:8px 10px}}
 
 .view-controls.image-controls{display:grid;grid-template-columns:repeat(2,auto)}.view-controls.image-controls button.bgm-toggle{grid-column:1 / -1;justify-self:center;flex-direction:row;padding:7px 17px;border:1px solid #fff6e6;border-radius:18px;background:linear-gradient(#fff7e8,#e8d4bb);box-shadow:0 3px 7px #82634825;font-size:13px;gap:7px}.view-controls.image-controls button.bgm-toggle[aria-pressed=true]{background:linear-gradient(#e4edda,#c1d1af)}
 
