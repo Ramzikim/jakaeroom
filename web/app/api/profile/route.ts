@@ -9,7 +9,7 @@ async function handle(request:Request){
  if(!token)return json({error:'로그인이 필요해요.'},401);
  const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
  const {data:{user},error:authError}=await db.auth.getUser(token);
- if(authError||!user)return json({error:'다시 로그인해 주세요.'},401);
+ if(authError||!user){console.warn('Profile authentication failed',{status:authError?.status,code:authError?.code,message:authError?.message});return json({error:'다시 로그인해 주세요.'},401);}
  try{
   // Only the verified Supabase user ID determines ownership and special status.
   const tier=classifyVip(user.id,{vip_dad:process.env.VIP_DAD_USER_ID,vip_owner:process.env.VIP_OWNER_USER_ID,vip_jangmi:process.env.VIP_JANGMI_USER_ID});
