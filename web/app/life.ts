@@ -20,7 +20,7 @@ export const atmospheres = {
  afternoon:{name:'오후',bg:'#ecd0bf',sun:'#ffa16a',sky:'#ef9c87',ambient:.8,key:2.4,fill:'#f4bca1',hemi:.45,lamp:1.8},
  night:{name:'밤',bg:'#304667',sun:'#a9b9e0',sky:'#283653',ambient:.55,key:.8,fill:'#aab9d9',hemi:.3,lamp:6},
 };
-export const waitingLines=['쭈인이는 뭐 하구 있을까아?','누가 나한테 딸기 좀 주면 좋겠다아!','재미있는 걸 하고싶어어.','우우웅...','재미있는 생각이 났는데 잊어버렸다아.','나는 솜이야아.'];
+export const waitingLines=['쭈인이는 뭐 하구 있을까아?','{vocativeLong}, 나한테 딸기 좀 주면 좋겠다아!','{nickname} {vocative}, 뭐 하고 있어어?','우우웅...','재미있는 생각이 났는데 잊어버렸다아.','나는 솜이야아.'];
 export const idleLines:Record<string,string[]>={
   center:['왔어어? 내 방에서 같이 놀자!','나 오늘도 귀엽지? 히히.'],
   bed:['이불이 폭신폭신해애.','조금만 누워 볼까아…'], window:['구름도 딸기 모양이면 좋겠다아.','밖에 구경하는 중이야아.'],

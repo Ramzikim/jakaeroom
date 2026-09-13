@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
+import {useProfileDialogue} from './profile-ui';
 import frames from './sprite-frames.json';
 import {animationFps,createLife,commandLife,tickLife,locked,RULES,type Action,type Band,type Sequence} from './behavior';
 import type {Mood} from './life';
@@ -12,6 +13,7 @@ const lengths=Object.fromEntries(Object.entries(frames).map(([k,v])=>[k,v.length
 const configureTextures=(textures:T.Texture[])=>{textures.forEach(t=>{if(t.colorSpace!==T.SRGBColorSpace){t.colorSpace=T.SRGBColorSpace;t.needsUpdate=true;}});};
 const moodFor=(sequence:Sequence):Mood=>sequence.includes('walk')?'walk':sequence==='sit_idle'?'sit':sequence==='sit_snooze'?'rest':sequence==='sit_sleeploop'?'sleep':sequence==='strawberry'?'berry':sequence==='hop'||sequence==='shy'?'pet':sequence==='bath'?'bath':'idle';
 export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:{command:{action:Action,id:number}|null,onMood:(m:Mood)=>void,onReady:()=>void,onPet:()=>void,positionRef:React.MutableRefObject<T.Vector3>,phase:Band}){
+ const dialogue=useProfileDialogue();
  const textures=useTexture(urls,configureTextures),carrier=useRef<T.Group>(null),sprite=useRef<T.Sprite>(null);
  const {gl}=useThree();
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
@@ -47,7 +49,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
     shader.vertexShader=shader.vertexShader.replace('mvPosition.xy += rotatedPosition;', 'mvPosition.xy += rotatedPosition; mvPosition.z += rotatedPosition.y * 0.6125;');
    }}/>
   </sprite>
-  {speech&&<Html position={[0,1.65,0]} center zIndexRange={[20,0]} style={{pointerEvents:'none'}}><div className="bubble">{speech}</div></Html>}
+  {speech&&<Html position={[0,1.65,0]} center zIndexRange={[20,0]} style={{pointerEvents:'none'}}><div className="bubble">{dialogue(speech)}</div></Html>}
  </group>;
 }
 
