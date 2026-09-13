@@ -3,12 +3,12 @@
 /* Display grading leaves the original artwork unchanged. */
 .stage canvas{filter:brightness(.94) saturate(1.12)}
 
-@font-face{font-family:Jua;src:url('/fonts/Jua-Regular.ttf') format('truetype');font-display:swap}
-body,button,select{font-family:Jua,'Malgun Gothic',sans-serif}
-.status,.bubble{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+@font-face{font-family:Paperlogy;src:url('/fonts/Paperlogy-5Medium.ttf') format('truetype');font-style:normal;font-weight:500;font-display:swap}
+body,button,select,input,textarea{font-family:Paperlogy,'Malgun Gothic',sans-serif;font-weight:500}
+.status,.bubble{font-family:Paperlogy,'Malgun Gothic',sans-serif;font-weight:500}
 .clay-icon{width:40px;height:40px;flex-shrink:0;filter:drop-shadow(0 3px 2px #845c4530)}
 .wordmark>.clay-icon{width:55px;height:55px}
-.wordmark h1{font-family:Jua,sans-serif;font-size:34px;color:#835d4e;letter-spacing:-1px;text-shadow:0 2px 0 #fff0df,0 4px 3px #825b4122;font-weight:400}
+.wordmark h1{font-family:Paperlogy,sans-serif;font-size:34px;color:#835d4e;letter-spacing:-1px;text-shadow:0 2px 0 #fff0df,0 4px 3px #825b4122;font-weight:500}
 .title-heart{font-size:24px;color:#ed9da4;display:inline-block;transform:rotate(12deg);margin-left:6px}
 .wordmark p{color:#a27d68}
 .dock{background:linear-gradient(#fff9ef,#f3e5d5);border:1px solid #fff9ef;box-shadow:inset 0 2px 4px #fff,0 8px 18px #86634422;padding:10px;gap:12px;border-radius:30px}
@@ -29,10 +29,10 @@ body,button,select{font-family:Jua,'Malgun Gothic',sans-serif}
 .dock.image-dock button,.dock.image-dock button:hover,.dock.image-dock button:disabled{background:none;border:0;box-shadow:none;padding:0;min-width:0;border-radius:20px;text-shadow:none}
 .image-dock img{display:block;width:154px;max-width:23.1vw;height:auto}.dock.image-dock button:disabled{opacity:.5;filter:grayscale(.6)}
 .view-controls.image-controls button,.view-controls.image-controls button:hover{background:none;border:0;box-shadow:none;padding:0;border-radius:20px}.image-controls img{display:block;width:75px;height:auto}
-.action-extras{display:flex;align-items:center;justify-content:center;gap:12px;margin:7px 0;font:11px 'Malgun Gothic',sans-serif}.action-extras button{border:1px solid #d8c4b0;border-radius:14px;padding:5px 10px;background:#fff7ec;font-size:11px}.action-extras span{color:#76594b}
+.action-extras{display:flex;align-items:center;justify-content:center;gap:12px;margin:7px 0;font-size:11px}.action-extras button{border:1px solid #d8c4b0;border-radius:14px;padding:5px 10px;background:#fff7ec;font-size:11px}.action-extras span{color:#76594b}
 .letter{background:repeating-linear-gradient(#fffcf5 0px,#fffcf5 31px,#f1eade 32px)}.letter-body{color:#47423f}
 .wordmark{transform:translateY(15px)}.image-title img{width:253px;max-width:52.8vw}
-.clock{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:13px}.clock time{font-size:14px}.clock small{font-size:10px}
+.clock{font-size:13px}.clock time{font-size:14px}.clock small{font-size:10px}
 @media(max-width:600px){.image-title img{width:192.5px}.clock{font-size:10px}.clock time{font-size:12px}.image-controls img{width:58px}.image-dock img{width:110%;max-width:24.2vw}.dock.image-dock{gap:0}.dock.image-dock button+button{margin-left:-2px}.action-extras{font-size:10px;gap:8px}}
 
 .view-controls.image-controls{gap:7px}
