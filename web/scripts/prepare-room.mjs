@@ -1,13 +1,24 @@
 import {finishProps} from './finish-props.mjs';
 import { NodeIO, getBounds } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP } from '@gltf-transform/extensions';
-import { dedup, prune, join, weld, meshopt } from '@gltf-transform/functions';
+import { dedup, prune, join, weld, meshopt, mergeDocuments, unpartition } from '@gltf-transform/functions';
 import {MeshoptEncoder} from 'meshoptimizer';
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs/promises';
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.encoder':MeshoptEncoder});
 const doc = await io.read('public/models/room.glb');
+// Replace only the approved wardrobe assembly and add its adjacent display cabinet.
+const cabinet = await io.read('public/models/display-cabinet-v001.glb');
+const replacementNames = new Set(cabinet.getRoot().listNodes().map(n => n.getName()));
+for (const node of doc.getRoot().listNodes()) if (replacementNames.has(node.getName())) node.dispose();
+const roomScene = doc.getRoot().listScenes()[0];
+const merged = mergeDocuments(doc, cabinet);
+for (const sourceScene of cabinet.getRoot().listScenes()) {
+ const importedScene = merged.get(sourceScene);
+ for (const node of [...importedScene.listChildren()]) roomScene.addChild(node);
+ importedScene.dispose();
+}
 const removed = new Set(['LOUNGE_SoftCushion','DEN_LoungePinkThrow','DEN_BedSmallDotCushion','DEN_SnackSidePot','DEN_SnackSideSoil','DEN_SnackSideFoliage']);
 for (const node of doc.getRoot().listNodes()) {
  if (removed.has(node.getName())) node.dispose();
@@ -31,7 +42,7 @@ for (const tex of doc.getRoot().listTextures()) {
 }
 doc.createExtension(EXTTextureWebP).setRequired(true);
 await MeshoptEncoder.ready;
-await doc.transform(join(), prune(), meshopt({encoder:MeshoptEncoder,level:'medium'}));
+await doc.transform(join(), prune(), unpartition(), meshopt({encoder:MeshoptEncoder,level:'medium'}));
 await io.write('public/models/room-web.glb', doc);
 console.log('Runtime room:', (await fs.stat('public/models/room-web.glb')).size, 'bytes;', doc.getRoot().listMeshes().length, 'meshes');
 
