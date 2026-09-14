@@ -22,7 +22,7 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
  render(){return this.state.failed?<div className="loading"><p>방을 불러오지 못했어요.</p><button onClick={()=>location.reload()}>다시 열기</button></div>:this.props.children;}
 }
-function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애의 방을 여는 중</p><progress/></div></Html>;}
+function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
 function Environment({phase,onBath,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,disabled:boolean}){
  const {scene}=useGLTF('/models/room-web.glb');
@@ -84,7 +84,7 @@ export default function Room(){
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
    <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><Bgm phase={phase}/></div>
-   <div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애를 기다리는 중'}</div>
+   <div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div>
   </section>
   <footer><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
@@ -95,5 +95,7 @@ export default function Room(){
   <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
  </main>;
 }
+
+
 
 

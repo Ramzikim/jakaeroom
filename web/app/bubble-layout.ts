@@ -1,8 +1,13 @@
 export type Rect={left:number;top:number;right:number;bottom:number};
 export function placeBubble(sprite:Rect,width:number,height:number,viewportWidth:number,viewportHeight:number){
- const edge=8,gap=viewportWidth<=600?18:12;
+ const edge=8,gap=viewportWidth<=600?6:4;
  const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(n,max));
  const x=clamp(sprite.right+gap,edge,viewportWidth-width-edge);
+ // Prefer beside the head, slightly higher, with a clear horizontal gap.
+ if(sprite.right+gap+width<=viewportWidth-edge){
+  const y=clamp(sprite.top-Math.min(16,height*.25),edge,viewportHeight-height-edge);
+  return {x:sprite.right+gap,y,visible:true};
+ }
  const above=sprite.top-gap-height;
  // Grow upwards, never down across the face. Fall back to a clear side near the top edge.
  if(above>=edge)return {x,y:Math.min(above,viewportHeight-height-edge),visible:true};
