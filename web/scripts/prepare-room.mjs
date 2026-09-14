@@ -21,9 +21,9 @@ for (const sourceScene of cabinet.getRoot().listScenes()) {
 }
 const removed = new Set(['LOUNGE_SoftCushion','DEN_LoungePinkThrow','DEN_BedSmallDotCushion','DEN_SnackSidePot','DEN_SnackSideSoil','DEN_SnackSideFoliage']);
 // Clear the two trailing plants and the low picture overlapped by the display cabinet.
-for (const name of ['DEN_LeftWallCascade','DEN_WardrobeTrailing']) {
- for (const part of ['Pot','Soil','Foliage']) removed.add(name+part);
-}
+const removedPlantPrefixes=['DEN_LeftWallCascade','DEN_WardrobeTrailing','DEN_WardrobeCorner'];
+for (const node of doc.getRoot().listNodes()) if(removedPlantPrefixes.some(prefix=>node.getName().startsWith(prefix))) removed.add(node.getName());
+removed.add('DEN_WardrobeSidePlantLedge');
 removed.add('DECOR_NeutralArt_0');
 for (const node of doc.getRoot().listNodes()) {
  if (removed.has(node.getName())) node.dispose();
@@ -46,6 +46,7 @@ for (const node of doc.getRoot().listNodes()) {
 }
 
 finishProps(doc);
+if(doc.getRoot().listNodes().some(n=>removedPlantPrefixes.some(prefix=>n.getName().startsWith(prefix))||n.getName()==='DEN_WardrobeSidePlantLedge')) throw new Error('Removed plant component survived');
 
 // Blender scene bookkeeping is authoring metadata, not runtime content.
 for (const scene of doc.getRoot().listScenes()) scene.setExtras({});
