@@ -5,7 +5,7 @@ import {authClient} from './auth-client';
 import {interpolateDialogue,kstYear,makeProfile,parseProfile,type Profile} from './profile';
 const Context=createContext<Profile|null>(null),guestKey='jakae-guest-profile-v1';
 export const useProfileDialogue=()=>{const profile=useContext(Context);return (line:string)=>interpolateDialogue(line,profile);};
-function readGuest():Profile|null{try{const stored=JSON.parse(localStorage.getItem(guestKey)||'null');return stored?makeProfile(parseProfile(stored),'guest','standard',stored.createdAt):null;}catch{return null;}}
+function readGuest():Profile|null{try{const stored=JSON.parse(localStorage.getItem(guestKey)||'null');return stored?makeProfile(parseProfile(stored),'guest',stored.createdAt):null;}catch{return null;}}
 
 export function ProfileProvider({children}:{children:React.ReactNode}){
  const [profile,setProfile]=useState<Profile|null>(null),[session,setSession]=useState<Session|null>(null),[ready,setReady]=useState(false),[loaded,setLoaded]=useState(false);
@@ -61,7 +61,7 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
     const current=await client!.auth.getSession(),token=current.data.session?.access_token;if(!token)throw new Error('다시 로그인해 주세요.');
     const response=await fetch('/api/profile',{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(input)}),body=await response.json();
     if(!response.ok)throw new Error(body.error);next=body.profile;
-   }else{next=makeProfile(input,'guest','standard',profile?.createdAt);localStorage.setItem(guestKey,JSON.stringify(next));}
+   }else{next=makeProfile(input,'guest',profile?.createdAt);localStorage.setItem(guestKey,JSON.stringify(next));}
    setProfile(next);setNotice(interpolateDialogue('{nickname} {vocativeLong}, 앞으로 이렇게 부를게!',next));close();
   }catch(e){setError(e instanceof Error?e.message:'저장하지 못했어요. 다시 시도해 주세요.');}finally{setSaving(false);}
  }
