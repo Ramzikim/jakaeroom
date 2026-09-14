@@ -34,10 +34,10 @@ export {letters} from './letters.ts';
 
 
 // Visibility paths for user-selected floor points; keep furniture clearance.
-const floorObstacles=[[-.87,1.27,-3.94,-1.46],[-.60,.60,-.08,.98],[.45,1.85,1.175,2.125],[2.85,4.45,-3.85,-2.13],[-4.45,-3.51,-3.9,-1.31],[-4.5,-1.65,1.2,4.5],[-3.2,.45,3.2,4.4],[1.75,4.45,3.2,4.4]];
+const floorObstacles=[[-.87,1.27,-3.94,-1.46],[-.60,.60,-.08,.98],[.45,1.85,1.175,2.125],[2.85,4.45,-3.85,-2.13],[-4.45,-3.51,-3.9,-1.31],[-4.5,-1.65,1.2,4.5],[-3.2,.45,3.2,4.4],[1.75,4.45,3.2,4.4],[-1.95,-.87,-4.5,-2.65]];
 export function floorPath(from:Point,to:Point):Point[]{
- const inside=(p:Point,b:number[])=>p[0]>b[0]-.12&&p[0]<b[1]+.12&&p[1]>b[2]-.12&&p[1]<b[3]+.12;
- if(Math.abs(to[0])>4.15||Math.abs(to[1])>3.9||floorObstacles.some(b=>inside(to,b)))return [];
+ const inside=(p:Point,b:number[])=>p[0]>b[0]-.28&&p[0]<b[1]+.28&&p[1]>b[2]-.28&&p[1]<b[3]+.28;
+ if(Math.abs(to[0])>4.15||Math.abs(to[1])>3.55||floorObstacles.some(b=>inside(to,b)))return [];
  const clear=(a:Point,b:Point)=>{const steps=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.04);for(let i=0;i<=steps;i++){const t=steps?i/steps:0,p:Point=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];if(floorObstacles.some((box,j)=>!(j===1&&inside(a,box))&&inside(p,box)))return false;}return true;};
  const nodes:Point[]=[from,...Object.entries(anchors).filter(([k])=>!['cushion','bathExit','bathDoor'].includes(k)).map(([,p])=>p),to];
  const costs=nodes.map(()=>Infinity),prev=nodes.map(()=>-1),seen=new Set<number>();costs[0]=0;
