@@ -12,7 +12,7 @@ const doc = await io.read('public/models/room.glb');
 const cabinet = await io.read('public/models/display-cabinet-v001.glb');
 const replacementNames = new Set(cabinet.getRoot().listNodes().map(n => n.getName()));
 for (const node of doc.getRoot().listNodes()) if (replacementNames.has(node.getName())) node.dispose();
-const roomScene = doc.getRoot().listScenes()[0];
+const roomScene = doc.getRoot().getDefaultScene();
 const merged = mergeDocuments(doc, cabinet);
 for (const sourceScene of cabinet.getRoot().listScenes()) {
  const importedScene = merged.get(sourceScene);
