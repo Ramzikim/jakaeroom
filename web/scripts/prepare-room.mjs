@@ -27,6 +27,14 @@ removed.add('DEN_WardrobeSidePlantLedge');
 removed.add('DECOR_NeutralArt_0');
 for (const node of doc.getRoot().listNodes()) {
  if (removed.has(node.getName())) node.dispose();
+ // Raise the seat by 18 cm; extend its pedestal while keeping its foot fixed.
+ if (['PH1_Chair_Seat','PH1_Chair_Back'].includes(node.getName())) {
+  const p=node.getTranslation();node.setTranslation([p[0],p[1]+.18,p[2]]);
+ }
+ if (node.getName()==='PH1_Chair_Base') {
+  const p=node.getTranslation(),s=node.getScale();
+  node.setTranslation([p[0],p[1]+.09,p[2]]).setScale([s[0],s[1]*(.52/.34),s[2]]);
+ }
  if (['PH3_Lounge_FloorSeat','PH3_Lounge_SeatCushion'].includes(node.getName())) {
   const p=node.getTranslation(),scale=node.getScale();
   node.setTranslation([p[0],.01+(p[1]-.01)*.45,p[2]]).setScale([scale[0],scale[1]*.45,scale[2]]);

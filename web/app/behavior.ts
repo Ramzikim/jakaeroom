@@ -1,8 +1,8 @@
 import {vipIdleLines,vipPettingLines,pettingLines,postBathLines,bathStartLines} from './dialogue.ts';
 import type {Tier} from './profile.ts';
-import {anchors,route,waitingLines,type Point} from './life.ts';
+import {anchors,route,floorPath,waitingLines,type Point} from './life.ts';
 export type Band='dawn'|'day'|'afternoon'|'night';
-export type Action='pet'|'bed'|'bath'|'berry'|'cushion'|'window'|'basketBerry';
+export type Action='pet'|'bed'|'bath'|'berry'|'cushion'|'window'|'basketBerry'|'move';
 export type Sequence='idle'|'walk_left'|'walk_right'|'backwalk_left'|'backwalk_right'|'hop'|'shy'|'sit_idle'|'sit_snooze'|'sit_sleeploop'|'bath'|'strawberry'|'window';
 export const RULES={fps:8,sleepSeconds:300,bathSeconds:6,berrySeconds:5,petWindow:180,petThreshold:5,nightSit:.45,nightSleep:.03,daySit:.025,dawnSleep:.75};
 export const positions={bed:[.2,.78,-2.65],bedRight:[1.85,0,-2.65],rug:[0,.235,.45],bath:[-3.5,.57,2.65],bathExit:[-2.5,.06,1.05]} satisfies Record<string,number[]>;
@@ -22,10 +22,18 @@ function say(s:Life,line:string){s.speech=line;s.speechUntil=s.now+7;}
 function place(s:Life,key:keyof typeof positions,node:string){s.point=[...positions[key]];s.node=node;s.path=[];s.pending=null;}
 function ground(s:Life){if(s.node==='cushion'){s.point=[...positions.rug];s.point[1]=0;return;}if(s.point[1]>.1){place(s,'bedRight','bed');}else s.point[1]=0;}
 function idle(s:Life,rng:()=>number){change(s,'idle');s.wait=5+rng()*7;}
-function go(s:Life,to:string){s.path=s.path.length?[...s.path,...route(s.destination,to)]:route(s.node,to);s.destination=to;if(s.path.length)change(s,walkSequence(s.path[0][0]-s.point[0],s.path[0][1]-s.point[2]));}
+function go(s:Life,to:string){if(s.node==='floor'){s.path=floorPath([s.point[0],s.point[2]],anchors[to]);s.destination=to;if(s.path.length)change(s,walkSequence(s.path[0][0]-s.point[0],s.path[0][1]-s.point[2]));return;}s.path=s.path.length?[...s.path,...route(s.destination,to)]:route(s.node,to);s.destination=to;if(s.path.length)change(s,walkSequence(s.path[0][0]-s.point[0],s.path[0][1]-s.point[2]));}
 function sitOrSleep(s:Life,sleep:boolean,rng:()=>number){ground(s);s.pending=sleep?'sleep':'sit';s.seat=sleep||rng()<.5?'bed':'rug';go(s,s.seat==='rug'?'cushion':s.seat);if(!s.path.length)arrive(s,rng);}
 function arrive(s:Life,rng:()=>number){s.node=s.destination;if(s.pending){const sleep=s.pending==='sleep';place(s,s.seat,s.seat==='rug'?'cushion':s.seat);change(s,sleep?'sit_snooze':'sit_idle');s.wait=s.cushionRequested?8+rng()*6:12+rng()*23;s.nextSpeech=s.cushionRequested?Infinity:s.now+15+rng()*12;s.speech='';if(!sleep&&(s.cushionRequested||rng()<.5))say(s,pick(sitLines,rng));}else{idle(s,rng);if(rng()<.65)say(s,pick(s.relationshipTier==='normal'?waitingLines:vipIdleLines,rng));}}
-export function commandLife(s:Life,action:Action,rng=Math.random):boolean{
+export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,band:Band='day'):boolean{
+ if(action==='cushion'&&s.sequence==='sit_idle')return false;
+ if(s.sequence==='sit_idle'){s.cushionRequested=false;s.path=[];s.pending=null;}
+ if(action==='move'){
+  if(locked(s)||!target)return false;
+  const start:Point=s.point[1]>.3?[positions.bedRight[0],positions.bedRight[2]]:[s.point[0],s.point[2]];
+  const path=floorPath(start,target);if(!path.length)return false;
+  ground(s);s.pending=null;s.path=path;s.destination='floor';s.speech='';change(s,walkSequence(path[0][0]-s.point[0],path[0][1]-s.point[2]));return true;
+ }
  if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];
  if(action==='pet'){
   if((locked(s)&&s.sequence!=='sit_sleeploop')||s.cushionRequested)return false;
@@ -35,7 +43,7 @@ export function commandLife(s:Life,action:Action,rng=Math.random):boolean{
  if(action==='window'){
   if(s.sequence==='window'||['hop','shy','bath','strawberry'].includes(s.sequence)||s.cushionRequested)return false;
   s.path=[];s.pending=null;s.point=[.68,1.02,-3.34];s.node='bed';s.destination='bed';change(s,'window');
-  say(s,pick(windowLines,rng));return true;
+  say(s,pick(windowLines[band],rng));return true;
  }
  if(s.sequence==='window'){place(s,'bedRight','bed');idle(s,rng);}
  if(s.sequence==='sit_sleeploop'&&action==='pet'){place(s,'bedRight','bed');s.awakeUntil=s.now+75+rng()*35;change(s,rng()<.5?'hop':'shy');say(s,'으으음… 잘 잤다아!');return true;}
@@ -88,4 +96,9 @@ export function readCounts(raw:string|null,date=kstDate()):LetterCounts{try{cons
 
 
 
-export const windowLines=['밖에 사람들 많이 다닌다아.','오늘은 누가 작애 보러 올까아?','구름 움직이는 거 재밌어어.','저 멀리까지 다 보였으면 좋겠다아.','{vocativeLong}도 같이 창밖 볼래애?'];
+export const windowLines:Record<Band,string[]>={
+ dawn:['밖이 엄청 조용하다아. 다 자나봐아.','별이 아직 남아있어어. 조금만 더 보고 잘래애.','이 시간엔 창밖도 졸려 보인다아.'],
+ day:['밖에 사람들 많이 다닌다아!','오늘은 누가 작애 보러 올까아?','햇빛 때문에 밖이 반짝반짝해애.'],
+ afternoon:['해가 조금씩 내려가고 있어어.','창밖 보고 있으면 시간 금방 가아.','밖에 나가진 않아도 구경하는 건 재밌어어.'],
+ night:['밖에 불빛들 켜졌다아. 예쁘다아.','밤 되니까 창문이 거울처럼 보여어.','{vocativeLong}도 이거 같이 보면 좋겠다아.'],
+};

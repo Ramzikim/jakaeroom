@@ -15,7 +15,7 @@ const all=Object.values(frames).flat(),urls=all.map(f=>f.url);
 const lengths=Object.fromEntries(Object.entries(frames).map(([k,v])=>[k,v.length])) as Record<Sequence,number>;
 const configureTextures=(textures:T.Texture[])=>{textures.forEach(t=>{if(t.colorSpace!==T.SRGBColorSpace){t.colorSpace=T.SRGBColorSpace;t.needsUpdate=true;}});};
 const moodFor=(sequence:Sequence):Mood=>sequence.includes('walk')?'walk':sequence==='sit_idle'?'sit':sequence==='sit_snooze'?'rest':sequence==='sit_sleeploop'?'sleep':sequence==='strawberry'?'berry':sequence==='hop'||sequence==='shy'?'pet':sequence==='bath'?'bath':sequence==='window'?'window':'idle';
-export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:{command:{action:Action,id:number}|null,onMood:(m:Mood)=>void,onReady:()=>void,onPet:()=>void,positionRef:React.MutableRefObject<T.Vector3>,phase:Band}){
+export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:{command:{action:Action,id:number,target?:[number,number]}|null,onMood:(m:Mood)=>void,onReady:()=>void,onPet:()=>void,positionRef:React.MutableRefObject<T.Vector3>,phase:Band}){
  const dialogue=useProfileDialogue(),profile=useJakaeProfile();
  const textures=useTexture(urls,configureTextures),carrier=useRef<T.Group>(null),sprite=useRef<T.Sprite>(null);
  const {gl}=useThree();
@@ -30,7 +30,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  const [testSpeech,setTestSpeech]=useState<string|null>(null);
  useEffect(()=>{if(process.env.NODE_ENV==='development')setTestSpeech(new URLSearchParams(location.search).get('speech'));},[]);
  useEffect(()=>{onReady();},[textures,onReady]);
- useEffect(()=>{if(command&&command.id!==seenCommand.current){seenCommand.current=command.id;commandLife(life.current,command.action);}},[command]);
+ useEffect(()=>{if(command&&command.id!==seenCommand.current){seenCommand.current=command.id;commandLife(life.current,command.action,Math.random,command.target,phase);}},[command,phase]);
  useFrame((_,delta)=>{
   const s=life.current,oldX=s.point[0],oldZ=s.point[2];tickLife(s,delta,phase,lengths);
   if(process.env.NODE_ENV==='development'){gl.domElement.dataset.sequence=s.sequence;gl.domElement.dataset.seat=s.node;gl.domElement.dataset.elapsed=String(Math.floor(s.now-s.started));}
@@ -42,7 +42,8 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   const frameIndex=oneShot?Math.min(index,sequence.length-1):index%sequence.length;
   const soundKey=`${s.sequence}:${s.started}:${index}`;
   if(soundFrame.current!==soundKey){if(soundFrame.current.startsWith('sit_sleeploop:')&&s.sequence!=='sit_sleeploop')playSfx('sleep');soundFrame.current=soundKey;const cue=frameSfx(s.sequence,frameIndex,Math.floor(index/sequence.length));if(cue&&(cue!=='step'||Math.hypot(s.point[0]-oldX,s.point[2]-oldZ)>.0001))playSfx(cue,cue==='step'?stepSide.current++:0);}
-  const material=sprite.current!.material as T.SpriteMaterial;material.depthTest=Math.hypot(s.point[0],s.point[2]-.45)>1.2;if(material.userData.support)material.userData.support.value=s.sequence==='sit_idle'&&s.node==='cushion'?1:0;material.map=textures[all.indexOf(frame)];
+  const inFrontOfChair=s.point[0]>2.4&&s.point[0]<4.1&&s.point[2]>-2.13&&s.point[2]<-.7;
+  const material=sprite.current!.material as T.SpriteMaterial;material.depthTest=!inFrontOfChair&&Math.hypot(s.point[0],s.point[2]-.45)>1.2;if(material.userData.support)material.userData.support.value=s.sequence==='sit_idle'&&s.node==='cushion'?1:0;material.map=textures[all.indexOf(frame)];
   // Canvas registration is fixed per sequence, so drawn jumps and breathing survive.
   let pixels=543,anchorX=.5,anchorY=0;
   if(s.sequence==='idle')pixels=467;

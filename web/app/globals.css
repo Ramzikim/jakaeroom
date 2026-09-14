@@ -57,3 +57,4 @@ body,button,select,input,textarea{font-family:Paperlogy,'Malgun Gothic',sans-ser
 
 /* Base text without a component-specific size: 16px → 18px. */
 body{font-size:18px}
+.lp-floating{position:fixed;z-index:100;max-height:calc(100svh - 16px)}.lp-floating header{cursor:grab;touch-action:none;user-select:none}.lp-floating header:active{cursor:grabbing}.lp-floating header img{pointer-events:none}.lp-floating header button{cursor:pointer}

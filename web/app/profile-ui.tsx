@@ -10,7 +10,7 @@ function readGuest():Profile|null{try{const stored=JSON.parse(localStorage.getIt
 
 export function ProfileProvider({children}:{children:React.ReactNode}){
  const [profile,setProfile]=useState<Profile|null>(null),[session,setSession]=useState<Session|null>(null),[ready,setReady]=useState(false),[loaded,setLoaded]=useState(false);
- const [error,setError]=useState(''),[saving,setSaving]=useState(false),[notice,setNotice]=useState('');
+ const [error,setError]=useState(''),[saving,setSaving]=useState(false);
  const dialog=useRef<HTMLDialogElement>(null),form=useRef<HTMLFormElement>(null),edit=useRef<HTMLButtonElement>(null);
  const client=authClient();
  useEffect(()=>{
@@ -50,7 +50,7 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
  async function logout(){
   const result=await client?.auth.signOut({scope:'local'});
   if(result?.error){setError('로그아웃하지 못했어요. 다시 시도해 주세요.');return;}
-  setSession(null);setProfile(readGuest());setNotice('로그아웃했어요. 게스트로 계속 놀 수 있어요.');
+  setSession(null);setProfile(readGuest());
  }
  async function save(event:React.FormEvent<HTMLFormElement>){
   event.preventDefault();setError('');setSaving(true);
@@ -63,13 +63,13 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
     const response=await fetch('/api/profile',{method:'PUT',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(input)}),body=await response.json();
     if(!response.ok)throw new Error(body.error);next=body.profile;
    }else{next=makeProfile(input,'guest',profile?.createdAt);localStorage.setItem(guestKey,JSON.stringify(next));}
-   setProfile(next);setNotice(interpolateDialogue('{nickname} {vocativeLong}, 앞으로 이렇게 부를게!',next));close();
+   setProfile(next);close();
   }catch(e){setError(e instanceof Error?e.message:'저장하지 못했어요. 다시 시도해 주세요.');}finally{setSaving(false);}
  }
  return <Context.Provider value={profile}>{children}<aside className="profile-control" aria-label="내 프로필">
   <button ref={edit} onClick={open}>{profile?`${profile.nickname} · ${profile.vocative}`:'이름 정하기'}</button>
   {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>로그인하고 저장하기</button>}
-  <span className="profile-notice" role="status">{notice}</span>
+
   {!dialog.current?.open&&error&&<span className="profile-error" role="alert">{error}</span>}
  </aside>
  <dialog ref={dialog} className="profile-dialog" onCancel={close} onClose={()=>edit.current?.focus()}>

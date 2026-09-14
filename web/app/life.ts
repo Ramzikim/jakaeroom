@@ -32,3 +32,15 @@ export {letters} from './letters.ts';
 
 
 
+
+// Visibility paths for user-selected floor points; keep furniture clearance.
+const floorObstacles=[[-.87,1.27,-3.94,-1.46],[-.60,.60,-.08,.98],[.45,1.85,1.175,2.125],[2.85,4.45,-3.85,-2.13],[-4.45,-3.51,-3.9,-1.31],[-4.5,-1.65,1.2,4.5],[-3.2,.45,3.2,4.4],[1.75,4.45,3.2,4.4]];
+export function floorPath(from:Point,to:Point):Point[]{
+ const inside=(p:Point,b:number[])=>p[0]>b[0]-.12&&p[0]<b[1]+.12&&p[1]>b[2]-.12&&p[1]<b[3]+.12;
+ if(Math.abs(to[0])>4.15||Math.abs(to[1])>3.9||floorObstacles.some(b=>inside(to,b)))return [];
+ const clear=(a:Point,b:Point)=>{const steps=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.04);for(let i=0;i<=steps;i++){const t=steps?i/steps:0,p:Point=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];if(floorObstacles.some((box,j)=>!(j===1&&inside(a,box))&&inside(p,box)))return false;}return true;};
+ const nodes:Point[]=[from,...Object.entries(anchors).filter(([k])=>!['cushion','bathExit','bathDoor'].includes(k)).map(([,p])=>p),to];
+ const costs=nodes.map(()=>Infinity),prev=nodes.map(()=>-1),seen=new Set<number>();costs[0]=0;
+ for(let step=0;step<nodes.length;step++){let u=-1;for(let i=0;i<nodes.length;i++)if(!seen.has(i)&&(u<0||costs[i]<costs[u]))u=i;if(u<0||!Number.isFinite(costs[u]))break;seen.add(u);for(let v=1;v<nodes.length;v++)if(!seen.has(v)&&clear(nodes[u],nodes[v])){const cost=costs[u]+Math.hypot(nodes[u][0]-nodes[v][0],nodes[u][1]-nodes[v][1]);if(cost<costs[v]){costs[v]=cost;prev[v]=u;}}}
+ const result:Point[]=[];let i=nodes.length-1;if(prev[i]<0)return [];while(i>0){result.unshift([...nodes[i]]);i=prev[i];}return result;
+}

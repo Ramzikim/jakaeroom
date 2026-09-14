@@ -4,7 +4,7 @@ import {bathStartLines} from '../app/dialogue.ts';
 import {frameSfx} from '../app/sfx.ts';
 const lengths=Object.fromEntries(['idle','walk_left','walk_right','backwalk_left','backwalk_right','hop','shy','sit_idle','sit_snooze','sit_sleeploop','bath','strawberry'].map(n=>[n,8])) as Record<Sequence,number>;
 const s=createLife();s.sequence='walk_right';s.point=[1.8,0,-.55];s.path=[[2.65,.55],[2.75,2.6]];s.destination='snack';
-assert(commandLife(s,'cushion',()=>.5));assert.equal(s.sequence,'sit_idle');assert.equal(s.path.length,0);assert(!commandLife(s,'cushion'));assert(!commandLife(s,'berry'));assert.equal(s.destination,'cushion');
+assert(commandLife(s,'cushion',()=>.5));assert.equal(s.sequence,'sit_idle');assert.equal(s.path.length,0);assert(!commandLife(s,'cushion'));assert(commandLife({...s,point:[...s.point],path:[...s.path]},'berry'));assert.equal(s.destination,'cushion');
 for(let i=0;i<3000&&(s.sequence as Sequence)!=='sit_idle';i++)tickLife(s,.05,'day',lengths,()=>.5);
 assert.equal(s.sequence,'sit_idle');assert.deepEqual(s.point,positions.rug);assert.ok(sitLines.includes(s.speech));const line=s.speech;assert(!commandLife(s,'cushion'));assert.equal(s.wait,11);
 for(let i=0;i<160;i++)tickLife(s,.05,'day',lengths,()=>.5);assert.equal(s.speech,line);
