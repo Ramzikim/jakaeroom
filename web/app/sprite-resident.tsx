@@ -42,7 +42,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   const frameIndex=oneShot?Math.min(index,sequence.length-1):index%sequence.length;
   const soundKey=`${s.sequence}:${s.started}:${index}`;
   if(soundFrame.current!==soundKey){if(soundFrame.current.startsWith('sit_sleeploop:')&&s.sequence!=='sit_sleeploop')playSfx('sleep');soundFrame.current=soundKey;const cue=frameSfx(s.sequence,frameIndex,Math.floor(index/sequence.length));if(cue&&(cue!=='step'||Math.hypot(s.point[0]-oldX,s.point[2]-oldZ)>.0001))playSfx(cue,cue==='step'?stepSide.current++:0);}
-  const material=sprite.current!.material as T.SpriteMaterial;material.map=textures[all.indexOf(frame)];
+  const material=sprite.current!.material as T.SpriteMaterial;if(material.userData.support)material.userData.support.value=s.sequence==='sit_idle'&&s.node==='cushion'?1:0;material.map=textures[all.indexOf(frame)];
   // Canvas registration is fixed per sequence, so drawn jumps and breathing survive.
   let pixels=543,anchorX=.5,anchorY=0;
   if(s.sequence==='idle')pixels=467;
@@ -70,7 +70,9 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
    <spriteMaterial map={textures[0]} transparent alphaTest={.05} depthTest depthWrite toneMapped={false} onBeforeCompile={shader=>{
     // Preserve artwork projection; depth follows an upright plane rooted at the feet.
     // Fixed camera elevation: 12.25 vertical / 20 horizontal.
-    shader.vertexShader=shader.vertexShader.replace('mvPosition.xy += rotatedPosition;', 'mvPosition.xy += rotatedPosition; mvPosition.z += rotatedPosition.y * 0.6125;');
+    shader.uniforms.seatedSupport={value:0};(sprite.current!.material as T.SpriteMaterial).userData.support=shader.uniforms.seatedSupport;
+    shader.vertexShader='uniform float seatedSupport;\n'+shader.vertexShader;
+    shader.vertexShader=shader.vertexShader.replace('mvPosition.xy += rotatedPosition;', 'mvPosition.xy += rotatedPosition; mvPosition.z += mix(rotatedPosition.y, abs(rotatedPosition.y), seatedSupport) * 0.6125;');
    }}/>
   </sprite>
   {(testSpeech||speech)&&<Html zIndexRange={[20,0]} style={{pointerEvents:'none'}} calculatePosition={(_,camera,size)=>{
@@ -85,6 +87,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
+
 
 
 

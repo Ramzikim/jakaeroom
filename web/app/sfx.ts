@@ -4,9 +4,9 @@ let rustle:AudioBuffer|undefined;
 const last=new Map<Sfx,number>();
 export function setSfxEnabled(value:boolean){enabled=value;if(master&&context)master.gain.setTargetAtTime(enabled?volume:0,context.currentTime,.02);}
 export function setSfxVolume(value:number){volume=Math.max(0,Math.min(1,value));setSfxEnabled(enabled);}
-export function unlockSfx(){
- if(typeof window==='undefined')return;
- try{context??=new AudioContext();if(!master){master=context.createGain();master.gain.value=enabled?volume:0;master.connect(context.destination);}if(context.state==='suspended')void context.resume().catch(()=>{});}catch{/* Audio unavailable: interactions still work. */}
+export async function unlockSfx(){
+ if(typeof window==='undefined')return false;
+ try{context??=new AudioContext();if(!master){master=context.createGain();master.gain.value=enabled?volume:0;master.connect(context.destination);}if(context.state==='suspended')await context.resume();return context.state==='running';}catch{return false;}
 }
 const settings:Record<Sfx,[number,number,number,number]>={step:[310,.065,.045,.24],pop:[430,.12,.08,.25],land:[170,.10,.05,.3],sit:[130,.17,.055,.4],eat:[540,.075,.035,.3],water:[650,.14,.045,.75],sleep:[240,.4,.035,1],paper:[950,.13,.025,.3],ui:[420,.035,.02,.09]};
 export function playSfx(kind:Sfx,alternate=0){
@@ -34,3 +34,4 @@ export function frameSfx(sequence:string,frame:number,cycle:number):Sfx|null{
  if(sequence==='bath'&&cycle===0&&[1,4,7].includes(frame))return 'water';
  return null;
 }
+

@@ -28,7 +28,7 @@ function arrive(s:Life,rng:()=>number){s.node=s.destination;if(s.pending){const 
 export function commandLife(s:Life,action:Action,rng=Math.random):boolean{
  if(s.sequence==='sit_sleeploop'&&action==='pet'){place(s,'bedRight','bed');s.awakeUntil=s.now+75+rng()*35;change(s,rng()<.5?'hop':'shy');say(s,'으으음… 잘 잤다아!');return true;}
  if(locked(s)||s.cushionRequested)return false;
- if(action==='cushion'){if(s.sequence==='sit_idle')return false;ground(s);s.cushionRequested=true;s.pending='sit';s.seat='rug';s.path=[];const start=anchors[s.node];if(start&&Math.hypot(start[0]-s.point[0],start[1]-s.point[2])>.01)s.path=[[...start],...route(s.node,'cushion')];else s.path=route(s.node,'cushion');s.destination='cushion';if(s.path.length)change(s,walkSequence(s.path[0][0]-s.point[0],s.path[0][1]-s.point[2]));else arrive(s,rng);return true;}
+ if(action==='cushion'){if(s.sequence==='sit_idle')return false;s.cushionRequested=true;s.pending='sit';s.seat='rug';s.path=[];s.destination='cushion';arrive(s,rng);return true;}
  if(action==='bed'){sitOrSleep(s,true,rng);return true;}
  if(action==='bath'){place(s,'bath','bathExit');change(s,'bath');say(s,pick(bathStartLines,rng));return true;}
  ground(s);s.pending=null;
@@ -69,5 +69,6 @@ export function tickLife(s:Life,dt:number,band:Band,lengths:Record<Sequence,numb
 export function kstDate(date=new Date()){return new Date(date.getTime()+9*3600000).toISOString().slice(0,10);}
 export type LetterCounts={date:string;dawn:number;day:number;afternoon:number;night:number};
 export function readCounts(raw:string|null,date=kstDate()):LetterCounts{try{const v=JSON.parse(raw||'null');if(v?.date===date&&(['dawn','day','afternoon','night'] as const).every(k=>Number.isInteger(v[k])&&v[k]>=0&&v[k]<=2))return v;}catch{}return {date,dawn:0,day:0,afternoon:0,night:0};}
+
 
 
