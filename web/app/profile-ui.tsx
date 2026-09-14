@@ -4,6 +4,7 @@ import type {Session} from '@supabase/supabase-js';
 import {authClient} from './auth-client';
 import {interpolateDialogue,kstYear,makeProfile,parseProfile,type Profile} from './profile';
 const Context=createContext<Profile|null>(null),guestKey='jakae-guest-profile-v1';
+export const useJakaeProfile=()=>useContext(Context);
 export const useProfileDialogue=()=>{const profile=useContext(Context);return (line:string)=>interpolateDialogue(line,profile);};
 function readGuest():Profile|null{try{const stored=JSON.parse(localStorage.getItem(guestKey)||'null');return stored?makeProfile(parseProfile(stored),'guest',stored.createdAt):null;}catch{return null;}}
 
@@ -82,3 +83,4 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
   </form>
  </dialog></Context.Provider>;
 }
+

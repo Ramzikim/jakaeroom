@@ -5,6 +5,8 @@ import {Html, OrbitControls, SoftShadows, useGLTF} from '@react-three/drei';
 import * as T from 'three';
 import type {OrbitControls as OrbitControlsType} from 'three-stdlib';
 import {kstDate,readCounts,type Action,type LetterCounts} from './behavior';
+import {useProfileDialogue} from './profile-ui';
+import {selectLetter} from './letters';
 import {Bgm} from './bgm';
 import {AccentLamps} from './accent-lamps';
 import {WindowSky} from './window-sky';
@@ -44,7 +46,8 @@ function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
 }
 
 export default function Room(){
- const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(0);
+ const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
+ const dialogue=useProfileDialogue();
  const dialog=useRef<HTMLDialogElement>(null),letterButton=useRef<HTMLButtonElement>(null),positionRef=useRef(new T.Vector3(1.65,.7,-.55));
  const phase=override||now.period,a=atmospheres[phase];
  const [counts,setCounts]=useState<LetterCounts>(()=>readCounts(null));
@@ -61,7 +64,7 @@ export default function Room(){
   const date=kstDate(),band=kst().period;let current=readCounts(JSON.stringify(countRef.current),date);
   try{current=readCounts(localStorage.getItem('jakae-letter-counts'),date);}catch{}
   if(current[band]>=2){storeCounts(current);return false;}
-  storeCounts({...current,[band]:current[band]+1});setLetter(n=>(n+1+Math.floor(Math.random()*(letters.length-1)))%letters.length);dialog.current?.showModal();return true;
+  storeCounts({...current,[band]:current[band]+1});setLetter(previous=>selectLetter(band,previous.id));dialog.current?.showModal();return true;
  };
  // Feature-detected agent access uses the same visible controls and local data.
  useEffect(()=>{
@@ -89,7 +92,8 @@ export default function Room(){
    <button aria-label="침대로 가기" disabled={!ready||busy} onClick={()=>act('bed')}><img src="/btn_03.png" alt=""/></button>
    <button aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={openLetter}><img src="/btn_04.png" alt=""/></button>
   </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}{process.env.NODE_ENV==='development'&&<button onClick={()=>storeCounts(readCounts(null))}>편지 리셋</button>}</div>{process.env.NODE_ENV==='development'&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
-  <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>놀러 온 너에게</h2><p className="letter-body">{letters[letter]}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
+  <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
  </main>;
 }
+
 

@@ -1,3 +1,4 @@
+import {renderTemplate} from './josa.ts';
 export type Gender='female'|'male';
 export type Tier='normal'|'vip_dad'|'vip_owner'|'vip_jangmi';
 export type ProfileInput={nickname:string;gender:Gender;birthYear:number};
@@ -30,7 +31,9 @@ export function interpolateDialogue(line:string,profile:Profile|null){
  const pool=profile?vipVocativePool(profile):[];
  const vocative=profile?resolveVocative(profile):'친구';
  const long:Record<string,string>={'누냐':'누냐아','형아':'형아아','이모':'이모오','삼쵼':'삼쵼','아빠':'아빠아','쭈인이':'엄마아','장미이모오':'장미이모오','친구':'친구야'};
- const tokens={nickname:profile?.nickname.trim()||'친구',vocative,vocativeLong:pool.length?pool[pool.length-1]:long[vocative]||vocative};
- if(pool.length)line=line.replace(/\{nickname\}\s*(?=\{vocative(?:Long)?\})/g,'');
- return line.replace(/\{(nickname|vocative|vocativeLong)\}/g,(_,key:keyof typeof tokens)=>tokens[key]);
+ const vipVocative=pool.length?pool[Array.from(line).reduce((sum,c)=>sum+c.charCodeAt(0),0)%pool.length]:vocative;
+ const tokens={vipVocative,nickname:profile?.nickname.trim()||'친구',vocative,vocativeLong:pool.length?pool[pool.length-1]:long[vocative]||vocative};
+ if(pool.length)line=line.replace(/\{nickname\}\s*(?=\{vocative(?:Long)?(?:\|(?:subject|topic|with|object|and))?\})/g,'');
+ return renderTemplate(line,tokens);
 }
+

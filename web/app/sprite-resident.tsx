@@ -3,7 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
-import {useProfileDialogue} from './profile-ui';
+import {useJakaeProfile,useProfileDialogue} from './profile-ui';
 import {placeBubble} from './bubble-layout';
 import frames from './sprite-frames.json';
 import {animationFps,createLife,commandLife,tickLife,locked,RULES,type Action,type Band,type Sequence} from './behavior';
@@ -14,11 +14,12 @@ const lengths=Object.fromEntries(Object.entries(frames).map(([k,v])=>[k,v.length
 const configureTextures=(textures:T.Texture[])=>{textures.forEach(t=>{if(t.colorSpace!==T.SRGBColorSpace){t.colorSpace=T.SRGBColorSpace;t.needsUpdate=true;}});};
 const moodFor=(sequence:Sequence):Mood=>sequence.includes('walk')?'walk':sequence==='sit_idle'?'sit':sequence==='sit_snooze'?'rest':sequence==='sit_sleeploop'?'sleep':sequence==='strawberry'?'berry':sequence==='hop'||sequence==='shy'?'pet':sequence==='bath'?'bath':'idle';
 export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:{command:{action:Action,id:number}|null,onMood:(m:Mood)=>void,onReady:()=>void,onPet:()=>void,positionRef:React.MutableRefObject<T.Vector3>,phase:Band}){
- const dialogue=useProfileDialogue();
+ const dialogue=useProfileDialogue(),profile=useJakaeProfile();
  const textures=useTexture(urls,configureTextures),carrier=useRef<T.Group>(null),sprite=useRef<T.Sprite>(null);
  const {gl}=useThree();
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
  const life=useRef(createLife()),seenCommand=useRef<number|null>(null),lastMood=useRef<Mood>('idle');
+ life.current.relationshipTier=profile?.relationshipTier||'normal';
  const [speech,setSpeech]=useState(life.current.speech);
  const bubble=useRef<HTMLDivElement>(null);
  const [testSpeech,setTestSpeech]=useState<string|null>(null);
@@ -65,4 +66,5 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
+
 

@@ -6,7 +6,7 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "test": "node --experimental-strip-types tests/life.test.ts && node --experimental-strip-types tests/behavior.test.ts && node tests/sprites.test.mjs && node --experimental-strip-types tests/profile.test.ts",
+    "test": "node --experimental-strip-types tests/life.test.ts && node --experimental-strip-types tests/behavior.test.ts && node tests/sprites.test.mjs && node --experimental-strip-types tests/profile.test.ts && node tests/content.test.ts",
     "predev": "node scripts/prepare-sprites.mjs",
     "prebuild": "node scripts/prepare-sprites.mjs"
   },
@@ -31,3 +31,4 @@
     "typescript": "^5.9.0"
   }
 }
+
