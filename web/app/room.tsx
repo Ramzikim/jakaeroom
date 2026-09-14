@@ -7,6 +7,7 @@ import type {OrbitControls as OrbitControlsType} from 'three-stdlib';
 import {kstDate,readCounts,type Action,type LetterCounts} from './behavior';
 import {useProfileDialogue} from './profile-ui';
 import {selectLetter} from './letters';
+import {playSfx,unlockSfx} from './sfx';
 import {Bgm} from './bgm';
 import {AccentLamps} from './accent-lamps';
 import {WindowSky} from './window-sky';
@@ -24,13 +25,14 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
 }
 function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
-function Environment({phase,onBath,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,disabled:boolean}){
+function Environment({phase,onBath,onCushion,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,disabled:boolean}){
  const {scene}=useGLTF('/models/room-web.glb');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
  return <group>
   <primitive object={room}/>
   {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   <WindowSky phase={phase}/>
   <AccentLamps power={a.lamp}/>
   <pointLight position={[-1.48,1.22,-3.47]} color="#ffc487" intensity={a.lamp} distance={4} decay={2}/>
@@ -58,13 +60,14 @@ export default function Room(){
  useEffect(()=>{try{const next=readCounts(localStorage.getItem('jakae-letter-counts'));countRef.current=next;setCounts(next);}catch{}},[]);
  useEffect(()=>{if(countRef.current.date!==kstDate())storeCounts(readCounts(null));},[now]);
  useEffect(()=>{const timer=setInterval(()=>setNow(kst()),15000);return()=>clearInterval(timer);},[]);
+ useEffect(()=>{const unlock=()=>unlockSfx();const click=(event:MouseEvent)=>{const button=(event.target as HTMLElement).closest('button');if(button&&!button.disabled&&button!==letterButton.current)playSfx('ui');};document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('click',click);return()=>{document.removeEventListener('pointerdown',unlock);document.removeEventListener('click',click);};},[]);
  const act=(action:Action)=>setCommand({action,id:Date.now()+Math.random()});
  const openLetter=()=>{
   if(dialog.current?.open)return false;
   const date=kstDate(),band=kst().period;let current=readCounts(JSON.stringify(countRef.current),date);
   try{current=readCounts(localStorage.getItem('jakae-letter-counts'),date);}catch{}
   if(current[band]>=2){storeCounts(current);return false;}
-  storeCounts({...current,[band]:current[band]+1});setLetter(previous=>selectLetter(band,previous.id));dialog.current?.showModal();return true;
+  storeCounts({...current,[band]:current[band]+1});setLetter(previous=>selectLetter(band,previous.id));dialog.current?.showModal();playSfx('paper');return true;
  };
  // Feature-detected agent access uses the same visible controls and local data.
  useEffect(()=>{
@@ -80,7 +83,7 @@ export default function Room(){
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
-    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
+    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
    <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><Bgm phase={phase}/></div>
@@ -95,6 +98,7 @@ export default function Room(){
   <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
  </main>;
 }
+
 
 
 

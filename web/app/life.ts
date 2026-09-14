@@ -1,10 +1,10 @@
 export type Point = [number, number];
 export type Mood = 'idle'|'walk'|'pet'|'berry'|'rest'|'sleep'|'wake'|'sit'|'bath';
 export const anchors: Record<string, Point> = {
-  bathExit:[-2.5,1.05], bathDoor:[-1.5,1.05], center:[1.65,-.55], bed:[1.85,-2.65], window:[1.85,-3.1], desk:[3.15,-1.4],
+  cushion:[0,.45], bathExit:[-2.5,1.05], bathDoor:[-1.5,1.05], center:[1.65,-.55], bed:[1.85,-2.65], window:[1.85,-3.1], desk:[3.15,-1.4],
   east:[2.65,.55], snack:[2.75,2.6], rug:[-.95,1.6], west:[-1.3,-.85], wardrobe:[-2.75,-2],
 };
-const edges: [string,string][] = [['bathExit','bathDoor'],['bathDoor','west'],['center','bed'],['bed','window'],['center','desk'],['center','east'],['east','snack'],['center','west'],['west','wardrobe'],['west','rug']];
+const edges: [string,string][] = [['rug','cushion'],['bathExit','bathDoor'],['bathDoor','west'],['center','bed'],['bed','window'],['center','desk'],['center','east'],['east','snack'],['center','west'],['west','wardrobe'],['west','rug']];
 export function route(from: string,to:string): Point[] {
   const queue=[[from]], seen=new Set([from]);
   while(queue.length){ const path=queue.shift()!; const last=path.at(-1)!;
@@ -29,5 +29,6 @@ export const idleLines:Record<string,string[]>={
   rug:['여기가 내 뒹굴뒹굴 자리야.','같이 쉬자아.'], wardrobe:['초록 꽃옷, 나랑 잘 어울리지?'],east:['딸기 냄새가 나는 것 같은데에?'],west:['내 방 구경해애. 맘에 들지?'],
 };
 export {letters} from './letters.ts';
+
 
 

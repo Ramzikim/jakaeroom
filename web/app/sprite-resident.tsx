@@ -1,4 +1,5 @@
 'use client';
+import {frameSfx,playSfx} from './sfx';
 import {shadowStyle} from './shadow';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
@@ -20,6 +21,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  const {gl}=useThree();
  const shadow=useRef<T.Mesh>(null);
  const shadowUniforms=useMemo(()=>({alpha:{value:.22},softness:{value:1}}),[]);
+ const soundFrame=useRef(''),stepSide=useRef(0);
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
  const life=useRef(createLife()),seenCommand=useRef<number|null>(null),lastMood=useRef<Mood>('idle');
  life.current.relationshipTier=profile?.relationshipTier||'normal';
@@ -30,24 +32,28 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  useEffect(()=>{onReady();},[textures,onReady]);
  useEffect(()=>{if(command&&command.id!==seenCommand.current){seenCommand.current=command.id;commandLife(life.current,command.action);}},[command]);
  useFrame((_,delta)=>{
-  const s=life.current;tickLife(s,delta,phase,lengths);
+  const s=life.current,oldX=s.point[0],oldZ=s.point[2];tickLife(s,delta,phase,lengths);
   if(process.env.NODE_ENV==='development'){gl.domElement.dataset.sequence=s.sequence;gl.domElement.dataset.seat=s.node;gl.domElement.dataset.elapsed=String(Math.floor(s.now-s.started));}
   const mood=moodFor(s.sequence);if(lastMood.current!==mood){lastMood.current=mood;onMood(mood);}
   const line=s.now<s.speechUntil?s.speech:'';if(line!==speech)setSpeech(line);
   if(frameClock.current.sequence!==s.sequence){frameClock.current={sequence:s.sequence,value:0};}else frameClock.current.value+=delta*animationFps(s);
   const sequence=frames[s.sequence],index=Math.floor(frameClock.current.value);
   const oneShot=['hop','shy','sit_snooze'].includes(s.sequence),frame=sequence[oneShot?Math.min(index,sequence.length-1):index%sequence.length];
+  const frameIndex=oneShot?Math.min(index,sequence.length-1):index%sequence.length;
+  const soundKey=`${s.sequence}:${s.started}:${index}`;
+  if(soundFrame.current!==soundKey){if(soundFrame.current.startsWith('sit_sleeploop:')&&s.sequence!=='sit_sleeploop')playSfx('sleep');soundFrame.current=soundKey;const cue=frameSfx(s.sequence,frameIndex,Math.floor(index/sequence.length));if(cue&&(cue!=='step'||Math.hypot(s.point[0]-oldX,s.point[2]-oldZ)>.0001))playSfx(cue,cue==='step'?stepSide.current++:0);}
   const material=sprite.current!.material as T.SpriteMaterial;material.map=textures[all.indexOf(frame)];
   // Canvas registration is fixed per sequence, so drawn jumps and breathing survive.
   let pixels=543,anchorX=.5,anchorY=0;
   if(s.sequence==='idle')pixels=467;
   if(s.sequence==='hop'){pixels=467;anchorX=236/426;anchorY=20/716;}
-  if(s.sequence==='sit_idle'){pixels=550;anchorY=20/522;}
+  if(s.sequence==='sit_idle'){pixels=550;anchorY=20/522;if(s.node==='cushion'){anchorX=235/440;anchorY=127/522;}}
   if(s.sequence==='sit_snooze'||s.sequence==='sit_sleeploop'){pixels=550;anchorY=16/494;}
   if(s.sequence==='bath'){pixels=510;anchorY=55/428;}
   if(s.sequence==='strawberry'){pixels=439/.95;anchorY=3/458;}
   sprite.current!.scale.set(frame.width*1.4/pixels,frame.height*1.4/pixels,1);sprite.current!.center.set(anchorX,anchorY);
   const shade=shadowStyle(s.sequence,frameClock.current.value),sw=sprite.current!.scale.x;
+  shadow.current!.position.set(s.sequence==='strawberry'?-.22*sw:0,.008,s.sequence==='strawberry'?-.40*sw:0);
   shadow.current!.visible=shade.visible;shadow.current!.scale.set(sw*shade.width,sw*shade.height/.522,1);
   shadowUniforms.alpha.value=shade.opacity;
   shadowUniforms.softness.value=Math.min(1,Math.max(.5,shade.blur/(sw*shade.width*(_.camera as T.OrthographicCamera).zoom*.5)));
@@ -79,6 +85,8 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
+
+
 
 
 

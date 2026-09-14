@@ -14,3 +14,4 @@ export const vipPettingLines=[
 ];
 export const pettingLines=['히히, 나 귀엽지이?','헤헤에... 이거 기분 좋아!','가시는 살살 만져야대.','더 쓰다듬어줘어!','작애 폭신하지이?','움~! 특별히 한번 더 하게 해줄까아.'];
 export const postBathLines=['개운하다아!','보송보송해졌어어.','첨벙첨벙 재밌었어어!','목욕하고 나오니까 기분 좋아아.','작애 완전 깨끗해졌지이?'];
+export const bathStartLines=['첨벙첨벙!','물놀이 재밌어어-','물 찹찹해서 죠아!','{nickname}, 작애 깨끗해지고 있어어!','{nickname}, 물 튀어도 뭐라 하면 안돼애!'];

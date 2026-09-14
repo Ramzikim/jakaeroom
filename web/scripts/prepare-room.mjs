@@ -27,6 +27,10 @@ removed.add('DEN_WardrobeSidePlantLedge');
 removed.add('DECOR_NeutralArt_0');
 for (const node of doc.getRoot().listNodes()) {
  if (removed.has(node.getName())) node.dispose();
+ if (['PH3_Lounge_FloorSeat','PH3_Lounge_SeatCushion'].includes(node.getName())) {
+  const p=node.getTranslation(),scale=node.getScale();
+  node.setTranslation([p[0],.01+(p[1]-.01)*.45,p[2]]).setScale([scale[0],scale[1]*.45,scale[2]]);
+ }
  // Rounded wall bottoms previously only touched the floor's rounded top edge.
  // Extend the lower bevel into the slab, keeping the wall tops and decor fixed.
  if (['PH1_Wall_Left','PH1_Wall_Back'].includes(node.getName())) {
