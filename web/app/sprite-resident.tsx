@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {shadowStyle} from './shadow';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
@@ -17,6 +18,8 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  const dialogue=useProfileDialogue(),profile=useJakaeProfile();
  const textures=useTexture(urls,configureTextures),carrier=useRef<T.Group>(null),sprite=useRef<T.Sprite>(null);
  const {gl}=useThree();
+ const shadow=useRef<T.Mesh>(null);
+ const shadowUniforms=useMemo(()=>({alpha:{value:.22},softness:{value:1}}),[]);
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
  const life=useRef(createLife()),seenCommand=useRef<number|null>(null),lastMood=useRef<Mood>('idle');
  life.current.relationshipTier=profile?.relationshipTier||'normal';
@@ -44,9 +47,19 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   if(s.sequence==='bath'){pixels=510;anchorY=55/428;}
   if(s.sequence==='strawberry'){pixels=439/.95;anchorY=3/458;}
   sprite.current!.scale.set(frame.width*1.4/pixels,frame.height*1.4/pixels,1);sprite.current!.center.set(anchorX,anchorY);
+  const shade=shadowStyle(s.sequence,frameClock.current.value),sw=sprite.current!.scale.x;
+  shadow.current!.visible=shade.visible;shadow.current!.scale.set(sw*shade.width,sw*shade.height/.522,1);
+  shadowUniforms.alpha.value=shade.opacity;
+  shadowUniforms.softness.value=Math.min(1,Math.max(.5,shade.blur/(sw*shade.width*(_.camera as T.OrthographicCamera).zoom*.5)));
   carrier.current!.position.set(s.point[0],s.point[1],s.point[2]);positionRef.current.copy(carrier.current!.position);positionRef.current.y+=.7;
  });
  return <group ref={carrier} position={[1.65,0,-.55]}>
+  <mesh ref={shadow} position={[0,.008,0]} rotation={[-Math.PI/2,0,Math.atan2(12,16)]} renderOrder={-1} raycast={()=>{}}>
+   <planeGeometry args={[1,1]}/>
+   <shaderMaterial transparent depthWrite={false} depthTest toneMapped={false} uniforms={shadowUniforms}
+    vertexShader={`varying vec2 shadowUv; void main(){shadowUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
+    fragmentShader={`varying vec2 shadowUv; uniform float alpha; uniform float softness; void main(){float r=length((shadowUv-.5)*2.0);float fade=1.0-smoothstep(1.0-softness,1.0,r);gl_FragColor=vec4(.16,.12,.10,alpha*fade);}`}/>
+  </mesh>
   <sprite ref={sprite} onClick={e=>{e.stopPropagation();if(!locked(life.current)||life.current.sequence==='sit_sleeploop')onPet();}} onPointerOver={()=>{document.body.style.cursor=!locked(life.current)||life.current.sequence==='sit_sleeploop'?'pointer':'auto';}} onPointerOut={()=>{document.body.style.cursor='auto';}}>
    <spriteMaterial map={textures[0]} transparent alphaTest={.05} depthTest depthWrite toneMapped={false} onBeforeCompile={shader=>{
     // Preserve artwork projection; depth follows an upright plane rooted at the feet.
@@ -66,6 +79,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
+
 
 
 
