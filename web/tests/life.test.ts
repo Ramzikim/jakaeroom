@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {anchors,kst,period,route,letters} from '../app/life.ts';
-const cases:[number,string][]=[[0,'dawn'],[5,'dawn'],[6,'day'],[15,'day'],[16,'afternoon'],[17,'afternoon'],[18,'night'],[23,'night']];
+const cases:[number,string][]=[[0,'dawn'],[5,'dawn'],[6,'day'],[15,'day'],[16,'afternoon'],[17,'afternoon'],[18,'afternoon'],[18.5,'night'],[22.99,'night'],[23,'dawn']];
 for(const [hour,expected] of cases)assert.equal(period(hour),expected);
 assert.deepEqual(kst(new Date('2026-09-10T21:30:00Z')),{hour:6,minute:30,period:'day'});
 assert.equal(kst(new Date('2026-09-11T15:00:00Z')).hour,0);

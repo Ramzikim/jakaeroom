@@ -1,5 +1,5 @@
 export type Point = [number, number];
-export type Mood = 'idle'|'walk'|'pet'|'berry'|'rest'|'sleep'|'wake'|'sit'|'bath';
+export type Mood = 'idle'|'walk'|'pet'|'berry'|'rest'|'sleep'|'wake'|'sit'|'bath'|'window';
 export const anchors: Record<string, Point> = {
   cushion:[0,.45], bathExit:[-2.5,1.05], bathDoor:[-1.5,1.05], center:[1.65,-.55], bed:[1.85,-2.65], window:[1.85,-3.1], desk:[3.15,-1.4],
   east:[2.65,.55], snack:[2.75,2.6], rug:[-.95,1.6], west:[-1.3,-.85], wardrobe:[-2.75,-2],
@@ -12,8 +12,8 @@ export function route(from: string,to:string): Point[] {
     for(const [a,b] of edges){const n=a===last?b:b===last?a:null;if(n&&!seen.has(n)){seen.add(n);queue.push([...path,n]);}}
   } return [];
 }
-export function period(hour:number):'dawn'|'day'|'afternoon'|'night'{return hour<6?'dawn':hour<16?'day':hour<18?'afternoon':'night';}
-export function kst(date=new Date()){const hour=(date.getUTCHours()+9)%24; return {hour,minute:date.getUTCMinutes(),period:period(hour)};}
+export function period(hour:number):'dawn'|'day'|'afternoon'|'night'{return hour<6||hour>=23?'dawn':hour<16?'day':hour<18.5?'afternoon':'night';}
+export function kst(date=new Date()){const hour=(date.getUTCHours()+9)%24; return {hour,minute:date.getUTCMinutes(),period:period(hour+date.getUTCMinutes()/60)};}
 export const atmospheres = {
  dawn:{name:'새벽',bg:'#17233d',sun:'#799ce5',sky:'#17274b',ambient:.28,key:.45,fill:'#718cc7',hemi:.22,lamp:8},
  day:{name:'낮',bg:'#f2eade',sun:'#fff0d5',sky:'#93cfe9',ambient:1.15,key:3.8,fill:'#fff3e3',hemi:.65,lamp:.25},

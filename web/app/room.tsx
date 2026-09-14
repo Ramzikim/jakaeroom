@@ -7,8 +7,9 @@ import type {OrbitControls as OrbitControlsType} from 'three-stdlib';
 import {kstDate,readCounts,type Action,type LetterCounts} from './behavior';
 import {useProfileDialogue} from './profile-ui';
 import {selectLetter} from './letters';
-import {playSfx,unlockSfx} from './sfx';
-import {Bgm} from './bgm';
+import {playSfx,setSfxEnabled} from './sfx';
+
+import {TableProps} from './table-props';
 import {AccentLamps} from './accent-lamps';
 import {WindowSky} from './window-sky';
 import {SpriteResident} from './sprite-resident';
@@ -17,7 +18,7 @@ import {anchors, atmospheres, idleLines, kst, letters, route, type Mood, type Po
 
 type Command={action:Action,id:number};
 const pick=<T,>(items:T[])=>items[Math.floor(Math.random()*items.length)];
-const names:Record<Mood,string>={idle:'느긋하게 쉬는 중',walk:'방 안을 산책하는 중',pet:'쓰담쓰담 받는 중',berry:'딸기가 제일 좋아!',rest:'이불 속으로 쏙',sleep:'새근새근 꿈꾸는 중',wake:'기지개 켜는 중',sit:'편하게 앉아 쉬는 중',bath:'보송보송 목욕하는 중'};
+const names:Record<Mood,string>={idle:'느긋하게 쉬는 중',walk:'방 안을 산책하는 중',pet:'쓰담쓰담 받는 중',berry:'딸기가 제일 좋아!',rest:'이불 속으로 쏙',sleep:'새근새근 꿈꾸는 중',wake:'기지개 켜는 중',sit:'편하게 앉아 쉬는 중',bath:'보송보송 목욕하는 중',window:'창밖을 구경하는 중'};
 
 class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
  state={failed:false};static getDerivedStateFromError(){return {failed:true};}
@@ -25,15 +26,15 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
 }
 function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
-function Environment({phase,onBath,onCushion,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,disabled:boolean}){
+function Environment({phase,onBath,onCushion,onWindow,onBasket,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,disabled:boolean}){
  const {scene}=useGLTF('/models/room-web.glb');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
  return <group>
-  <primitive object={room}/>
+  <primitive object={room}/><TableProps onBasket={onBasket} disabled={disabled}/>
   {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
-  <WindowSky phase={phase}/>
+  <WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{document.body.style.cursor="pointer";}} onPointerOut={()=>{document.body.style.cursor="auto";}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
   <AccentLamps power={a.lamp}/>
   <pointLight position={[-1.48,1.22,-3.47]} color="#ffc487" intensity={a.lamp} distance={4} decay={2}/>
   <pointLight position={[2.28,1.45,-3.48]} color="#ffe0b1" intensity={a.lamp*.8} distance={4}/>
@@ -41,9 +42,31 @@ function Environment({phase,onBath,onCushion,disabled}:{phase:keyof typeof atmos
 }
 
 function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
- const controls=useRef<OrbitControlsType>(null),{camera,size}=useThree(),last=useRef(0);
- useEffect(()=>{const c=camera as T.OrthographicCamera;c.position.set(12,13,16);c.zoom=Math.min(size.width/12.8,size.height/10.4);c.updateProjectionMatrix();controls.current?.target.set(0,.75,0);controls.current?.update();},[camera,size.width,size.height]);
- useFrame(()=>{const c=camera as T.OrthographicCamera,base=Math.min(size.width/12.8,size.height/10.4);if(last.current!==zoomEvent.id){last.current=zoomEvent.id;c.zoom=T.MathUtils.clamp(c.zoom*(zoomEvent.direction>0?1.3:1/1.3),base*.85,base*3.3);c.updateProjectionMatrix();}if(controls.current){controls.current.minZoom=base*.85;controls.current.maxZoom=base*3.3;}});
+ const controls=useRef<OrbitControlsType>(null),{camera,size,gl}=useThree(),last=useRef(0);
+ const pan=useRef({x:0,y:0});
+ const setPan=(value:{x:number,y:number})=>{
+  const c=camera as T.OrthographicCamera;
+  // Room extents in the fixed camera view. Zooming in reveals more pan travel.
+  const limitX=Math.max(2.5,6.3-size.width/c.zoom/2+.5);
+  const limitY=Math.max(1.5,4.5-size.height/c.zoom/2+.5);
+  const next={x:T.MathUtils.clamp(value.x,-limitX,limitX),y:T.MathUtils.clamp(value.y,-limitY,limitY)};
+  const right=new T.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+  const up=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+  const shift=right.multiplyScalar(next.x-pan.current.x).add(up.multiplyScalar(next.y-pan.current.y));
+  camera.position.add(shift);controls.current?.target.add(shift);
+  pan.current=next;
+ };
+ useEffect(()=>{
+  const canvas=gl.domElement;let drag:number|null=null,previous={x:0,y:0};
+  const down=(event:PointerEvent)=>{if(event.button!==1)return;event.preventDefault();event.stopImmediatePropagation();drag=event.pointerId;previous={x:event.clientX,y:event.clientY};canvas.setPointerCapture(drag);};
+  const move=(event:PointerEvent)=>{if(event.pointerId!==drag)return;event.preventDefault();event.stopImmediatePropagation();const zoom=(camera as T.OrthographicCamera).zoom;setPan({x:pan.current.x-(event.clientX-previous.x)/zoom,y:pan.current.y+(event.clientY-previous.y)/zoom});previous={x:event.clientX,y:event.clientY};};
+  const up=(event:PointerEvent)=>{if(event.pointerId!==drag)return;event.stopImmediatePropagation();if(canvas.hasPointerCapture(drag))canvas.releasePointerCapture(drag);drag=null;};
+  const auxiliary=(event:MouseEvent)=>{if(event.button===1)event.preventDefault();};
+  canvas.addEventListener('pointerdown',down,true);canvas.addEventListener('pointermove',move,true);canvas.addEventListener('pointerup',up,true);canvas.addEventListener('pointercancel',up,true);canvas.addEventListener('auxclick',auxiliary);
+  return()=>{canvas.removeEventListener('pointerdown',down,true);canvas.removeEventListener('pointermove',move,true);canvas.removeEventListener('pointerup',up,true);canvas.removeEventListener('pointercancel',up,true);canvas.removeEventListener('auxclick',auxiliary);};
+ },[camera,gl,size.width,size.height]);
+ useEffect(()=>{const c=camera as T.OrthographicCamera;pan.current={x:0,y:0};c.position.set(12,13,16);c.zoom=Math.min(size.width/12.8,size.height/10.4);c.updateProjectionMatrix();controls.current?.target.set(0,.75,0);controls.current?.update();},[camera,size.width,size.height]);
+ useFrame(()=>{const c=camera as T.OrthographicCamera,base=Math.min(size.width/12.8,size.height/10.4);if(last.current!==zoomEvent.id){last.current=zoomEvent.id;c.zoom=T.MathUtils.clamp(c.zoom*(zoomEvent.direction>0?1.3:1/1.3),base*.85,base*3.3);c.updateProjectionMatrix();}if(controls.current){controls.current.minZoom=base*.85;controls.current.maxZoom=base*3.3;}setPan(pan.current);});
  return <OrbitControls ref={controls} target={[0,.75,0]} enablePan={false} enableRotate={false} enableDamping zoomSpeed={.6}/>;
 }
 
@@ -60,7 +83,7 @@ export default function Room(){
  useEffect(()=>{try{const next=readCounts(localStorage.getItem('jakae-letter-counts'));countRef.current=next;setCounts(next);}catch{}},[]);
  useEffect(()=>{if(countRef.current.date!==kstDate())storeCounts(readCounts(null));},[now]);
  useEffect(()=>{const timer=setInterval(()=>setNow(kst()),15000);return()=>clearInterval(timer);},[]);
- useEffect(()=>{const unlock=()=>unlockSfx();const click=(event:MouseEvent)=>{const button=(event.target as HTMLElement).closest('button');if(button&&!button.disabled&&button!==letterButton.current)playSfx('ui');};document.addEventListener('pointerdown',unlock,{passive:true});document.addEventListener('click',click);return()=>{document.removeEventListener('pointerdown',unlock);document.removeEventListener('click',click);};},[]);
+ useEffect(()=>{setSfxEnabled(false);},[]);
  const act=(action:Action)=>setCommand({action,id:Date.now()+Math.random()});
  const openLetter=()=>{
   if(dialog.current?.open)return false;
@@ -83,10 +106,10 @@ export default function Room(){
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
-    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
+    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
-   <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><Bgm phase={phase}/></div>
+   <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button></div>
    <div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div>
   </section>
   <footer><nav className="dock image-dock" aria-label="작애와 놀기">

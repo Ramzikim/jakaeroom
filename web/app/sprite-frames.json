@@ -490,5 +490,43 @@
       "width": 384,
       "height": 554
     }
+  ],
+  "window": [
+    {
+      "url": "/jakae_sprite/jakae_window_01.png",
+      "number": 1,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_window_02.png",
+      "number": 2,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_window_03.png",
+      "number": 3,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_window_04.png",
+      "number": 4,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_window_05.png",
+      "number": 5,
+      "width": 384,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_window_06.png",
+      "number": 6,
+      "width": 384,
+      "height": 554
+    }
   ]
 }

@@ -3,7 +3,7 @@ import {parseProfile,kstYear,resolveVocative,classifyVip,makeProfile,interpolate
 const female={nickname:'유진',gender:'female' as const,birthYear:1996},male={...female,gender:'male' as const};
 assert.equal(kstYear(new Date('2026-12-31T14:59:59Z')),2026);
 assert.equal(kstYear(new Date('2026-12-31T15:00:00Z')),2027);
-for(const [p,young,older] of [[female,'누냐','이모'],[male,'형아','삼쵼']] as const){assert.equal(resolveVocative(p,2026),young);assert.equal(resolveVocative(p,2027),older);}
+for(const [p,young,older] of [[female,'누냐','이모'],[male,'형아','삼촌']] as const){assert.equal(resolveVocative(p,2026),young);assert.equal(resolveVocative(p,2027),older);}
 for(const birthYear of [0,1800,2027,1996.5,NaN])assert.throws(()=>parseProfile({...female,birthYear},2026));
 assert.throws(()=>parseProfile({...female,nickname:'   '}));assert.throws(()=>parseProfile({...female,gender:'vip_dad'}));
 assert.deepEqual(parseProfile({...female,nickname:' 유진 ',relationshipTier:'vip_dad',userId:'other'},2026),female);

@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const dest=path.resolve('public/music');
+const source=fs.existsSync(path.resolve('../asset/Music'))?path.resolve('../asset/Music'):dest;
+fs.mkdirSync(dest,{recursive:true});
+const files=fs.readdirSync(source);
+const audio=files.filter(f=>/\.(mp3|wav|ogg|m4a|aac|flac|webm)$/i.test(f)).sort((a,b)=>a.localeCompare(b,'ko'));
+if(audio.length!==10)throw new Error(`Expected 10 tracks, found ${audio.length}`);
+const icons=Object.fromEntries(['music','out','play','play_ing'].map(name=>{const file=files.find(f=>path.parse(f).name===name);if(!file)throw new Error(`Missing ${name}`);return [name,file];}));
+for(const file of [...audio,...Object.values(icons)])if(source!==dest)fs.copyFileSync(path.join(source,file),path.join(dest,file));
+fs.writeFileSync('app/music-files.json',JSON.stringify({tracks:audio.map(file=>({title:path.parse(file).name,url:'/music/'+file})),icons:Object.fromEntries(Object.entries(icons).map(([k,v])=>[k,'/music/'+v]))},null,2));
+console.log(`Prepared ${audio.length} tracks`);

@@ -50,6 +50,12 @@ for (const node of doc.getRoot().listNodes()) {
 }
 
 finishProps(doc);
+for(const node of [...doc.getRoot().listNodes()]){
+ const name=node.getName();
+ if(['LOUNGE_Mug','LOUNGE_Plate','SNACK_Strawberry_Plate','DEN_SnackTeaTray'].includes(name)||['DEN_LoungeMagazine','DEN_TeaTin','SNACK_Container_'].some(prefix=>name.startsWith(prefix)))node.dispose();
+}
+// Keep the floor plant removed for the standing lamp.
+for(const node of [...doc.getRoot().listNodes()])if(node.getName().startsWith('DEN_FrontStorageMedium'))node.dispose();
 if(doc.getRoot().listNodes().some(n=>removedPlantPrefixes.some(prefix=>n.getName().startsWith(prefix))||n.getName()==='DEN_WardrobeSidePlantLedge')) throw new Error('Removed plant component survived');
 
 // Blender scene bookkeeping is authoring metadata, not runtime content.

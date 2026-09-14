@@ -1,0 +1,50 @@
+{
+  "tracks": [
+    {
+      "title": "달나라 탐험",
+      "url": "/music/달나라 탐험.mp3"
+    },
+    {
+      "title": "달빛 책상",
+      "url": "/music/달빛 책상.mp3"
+    },
+    {
+      "title": "뒹굴뒹굴 작애",
+      "url": "/music/뒹굴뒹굴 작애.mp3"
+    },
+    {
+      "title": "뚱땅뚱땅 걸어요",
+      "url": "/music/뚱땅뚱땅 걸어요.mp3"
+    },
+    {
+      "title": "별똥별에 소원을",
+      "url": "/music/별똥별에 소원을.mp3"
+    },
+    {
+      "title": "솜뭉치 꿈나라",
+      "url": "/music/솜뭉치 꿈나라.mp3"
+    },
+    {
+      "title": "엉뚱한 아침",
+      "url": "/music/엉뚱한 아침.mp3"
+    },
+    {
+      "title": "코야코야 별빛",
+      "url": "/music/코야코야 별빛.mp3"
+    },
+    {
+      "title": "쿠키 먹는 오후",
+      "url": "/music/쿠키 먹는 오후.mp3"
+    },
+    {
+      "title": "폴짝폴짝 티타임",
+      "url": "/music/폴짝폴짝 티타임.mp3"
+    }
+  ],
+  "icons": {
+    "music": "/music/music.png",
+    "out": "/music/out.png",
+    "play": "/music/play.png",
+    "play_ing": "/music/play_ing.png"
+  }
+}

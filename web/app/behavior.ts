@@ -2,17 +2,17 @@ import {vipIdleLines,vipPettingLines,pettingLines,postBathLines,bathStartLines} 
 import type {Tier} from './profile.ts';
 import {anchors,route,waitingLines,type Point} from './life.ts';
 export type Band='dawn'|'day'|'afternoon'|'night';
-export type Action='pet'|'bed'|'bath'|'berry'|'cushion';
-export type Sequence='idle'|'walk_left'|'walk_right'|'backwalk_left'|'backwalk_right'|'hop'|'shy'|'sit_idle'|'sit_snooze'|'sit_sleeploop'|'bath'|'strawberry';
-export const RULES={fps:8,sleepSeconds:300,bathSeconds:6,berrySeconds:5,petWindow:10,petThreshold:3,refusalChance:.5,nightSit:.28,nightSleep:.12,daySit:.025,dawnSleep:.75};
+export type Action='pet'|'bed'|'bath'|'berry'|'cushion'|'window'|'basketBerry';
+export type Sequence='idle'|'walk_left'|'walk_right'|'backwalk_left'|'backwalk_right'|'hop'|'shy'|'sit_idle'|'sit_snooze'|'sit_sleeploop'|'bath'|'strawberry'|'window';
+export const RULES={fps:8,sleepSeconds:300,bathSeconds:6,berrySeconds:5,petWindow:180,petThreshold:5,nightSit:.45,nightSleep:.03,daySit:.025,dawnSleep:.75};
 export const positions={bed:[.2,.78,-2.65],bedRight:[1.85,0,-2.65],rug:[0,.235,.45],bath:[-3.5,.57,2.65],bathExit:[-2.5,.06,1.05]} satisfies Record<string,number[]>;
 export const sitLines=['여기 앉아 있으니까 편하다아.','뭐하고 놀까아?','조금 심심해애.','딸기 생각나아...','가만히 있는 것도 좋아아.','누가 놀러 안 오나아.','잠깐 쉬는 중이야아.','작애 지금 멍때리고 있어어.'];
 export const dawnLines=['졸린데 잠이 안와아...','조금만 더 놀다가 잘래애.','눈은 감기는데에... 아직 안 잘래애.','새벽은 조용해서 좋은데에, 조금 심심해애.','잠깐만 돌아다니다가 다시 잘 거야아.','자야 하는데에... 괜히 놀고 싶어어.','꿈꾸기 전에 조금만 더 있을래애.'];
 export const dreamLines=['딸기 케이크 먹는 꿈 꾸는 중이야아...','엄청 신나는 꿈 꾸고 있어어!','미미랑 놀러 가는 꿈이야아.','딸기가 산만큼 나왔어어...','재밌는 꿈 꾸는 중이야아.','으음... 조금 슬픈 꿈이야아...','구름 위에서 뛰어노는 꿈이야아.','과자 잔뜩 먹는 꿈 꾸고 있어어.','쭈욱 자고 싶다아...','새근새근...'];
-export const refusalLines=['나중에 쓰다듬어어!','털 다 망가지겠어!','작애 털 눌리잖아아.','잠깐만 쉬었다가아!'];
+export const refusalLines=['나중에 쓰다듬어어!','털 다 망가지겠어!','작애 털 눌리잖아아.','잠깐만 쉬었다가아!','그만그마안!','작애 좋아하는 거 알겠어~','나 찌그러져어.'];
 const wetLines=['젖은 솜이 됐어어...','몸이 무겁다아!','어서 말랐으면 좋겠어어.'];
 export function walkSequence(dx:number,dz:number):Sequence{const right=16*dx-12*dz,toward=12*dx+16*dz;return `${toward<0?'backwalk':'walk'}_${right<0?'left':'right'}`;}
-export function createLife(){return {relationshipTier:'normal' as Tier,postBathPending:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
+export function createLife(){return {relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
 export function animationFps(s:ReturnType<typeof createLife>){return s.sequence==='sit_idle'||s.sequence==='sit_sleeploop'?6:s.sequence.includes('walk')&&s.now<s.wetUntil?RULES.fps*.65:RULES.fps;}
 export type Life=ReturnType<typeof createLife>;
 export const locked=(s:Life)=>['hop','shy','bath','strawberry','sit_snooze','sit_sleeploop'].includes(s.sequence)||s.pending==='sleep';
@@ -26,22 +26,37 @@ function go(s:Life,to:string){s.path=s.path.length?[...s.path,...route(s.destina
 function sitOrSleep(s:Life,sleep:boolean,rng:()=>number){ground(s);s.pending=sleep?'sleep':'sit';s.seat=sleep||rng()<.5?'bed':'rug';go(s,s.seat==='rug'?'cushion':s.seat);if(!s.path.length)arrive(s,rng);}
 function arrive(s:Life,rng:()=>number){s.node=s.destination;if(s.pending){const sleep=s.pending==='sleep';place(s,s.seat,s.seat==='rug'?'cushion':s.seat);change(s,sleep?'sit_snooze':'sit_idle');s.wait=s.cushionRequested?8+rng()*6:12+rng()*23;s.nextSpeech=s.cushionRequested?Infinity:s.now+15+rng()*12;s.speech='';if(!sleep&&(s.cushionRequested||rng()<.5))say(s,pick(sitLines,rng));}else{idle(s,rng);if(rng()<.65)say(s,pick(s.relationshipTier==='normal'?waitingLines:vipIdleLines,rng));}}
 export function commandLife(s:Life,action:Action,rng=Math.random):boolean{
+ if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];
+ if(action==='pet'){
+  if((locked(s)&&s.sequence!=='sit_sleeploop')||s.cushionRequested)return false;
+  if(s.pets.length>=RULES.petThreshold-1){say(s,pick(refusalLines,rng));return true;}
+  s.pets.push(s.now);
+ }
+ if(action==='window'){
+  if(s.sequence==='window'||['hop','shy','bath','strawberry'].includes(s.sequence)||s.cushionRequested)return false;
+  s.path=[];s.pending=null;s.point=[.68,1.02,-3.34];s.node='bed';s.destination='bed';change(s,'window');
+  say(s,pick(windowLines,rng));return true;
+ }
+ if(s.sequence==='window'){place(s,'bedRight','bed');idle(s,rng);}
  if(s.sequence==='sit_sleeploop'&&action==='pet'){place(s,'bedRight','bed');s.awakeUntil=s.now+75+rng()*35;change(s,rng()<.5?'hop':'shy');say(s,'으으음… 잘 잤다아!');return true;}
+ if(action==='basketBerry'){
+  if(locked(s))return false;
+  s.cushionRequested=false;s.basketBerry=true;place(s,'rug','cushion');s.destination='cushion';change(s,'strawberry');say(s,'딸기다아! 잘 먹을게애.');return true;
+ }
  if(locked(s)||s.cushionRequested)return false;
  if(action==='cushion'){if(s.sequence==='sit_idle')return false;s.cushionRequested=true;s.pending='sit';s.seat='rug';s.path=[];s.destination='cushion';arrive(s,rng);return true;}
  if(action==='bed'){sitOrSleep(s,true,rng);return true;}
  if(action==='bath'){place(s,'bath','bathExit');change(s,'bath');say(s,pick(bathStartLines,rng));return true;}
  ground(s);s.pending=null;
  if(action==='berry'){change(s,'strawberry');say(s,'딸기다아! 잘 먹을게애.');return true;}
- s.pets=s.pets.filter(t=>s.now-t<RULES.petWindow);
- if(s.pets.length>=RULES.petThreshold&&rng()<RULES.refusalChance){idle(s,rng);say(s,pick(refusalLines,rng));return true;}
- s.pets.push(s.now);change(s,rng()<.5?'hop':'shy');say(s,pick(s.relationshipTier==='normal'?pettingLines:vipPettingLines,rng));return true;
+ change(s,rng()<.5?'hop':'shy');say(s,pick(s.relationshipTier==='normal'?pettingLines:vipPettingLines,rng));return true;
 }
 export function tickLife(s:Life,dt:number,band:Band,lengths:Record<Sequence,number>,rng=Math.random){
- s.now+=dt;const elapsed=s.now-s.started;
+ s.now+=dt;if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];const elapsed=s.now-s.started;
  if(s.postBathPending&&s.now>=s.speechUntil&&s.now>=s.wetUntil&&!locked(s)){say(s,pick(postBathLines,rng));s.postBathPending=false;}
- if(s.sequence==='hop'||s.sequence==='shy'){if(elapsed>=lengths[s.sequence]/RULES.fps)idle(s,rng);}
- else if(s.sequence==='strawberry'){if(elapsed>=RULES.berrySeconds)idle(s,rng);}
+ if(s.sequence==='window'){if(elapsed>=10){place(s,'bedRight','bed');idle(s,rng);}}
+ else if(s.sequence==='hop'||s.sequence==='shy'){if(elapsed>=lengths[s.sequence]/RULES.fps)idle(s,rng);}
+ else if(s.sequence==='strawberry'){if(elapsed>=RULES.berrySeconds){if(s.basketBerry){s.basketBerry=false;ground(s);idle(s,rng);go(s,'rug');}else idle(s,rng);}}
  else if(s.sequence==='bath'){if(elapsed>=RULES.bathSeconds){place(s,'bathExit','bathExit');s.wetUntil=s.now+5;s.postBathPending=true;go(s,'center');say(s,pick(wetLines,rng));}}
  else if(s.sequence==='sit_snooze'){if(elapsed>=lengths.sit_snooze/RULES.fps){change(s,'sit_sleeploop');s.nextSpeech=s.now+20+rng()*15;}}
  else if(s.sequence==='sit_sleeploop'){
@@ -72,3 +87,5 @@ export function readCounts(raw:string|null,date=kstDate()):LetterCounts{try{cons
 
 
 
+
+export const windowLines=['밖에 사람들 많이 다닌다아.','오늘은 누가 작애 보러 올까아?','구름 움직이는 거 재밌어어.','저 멀리까지 다 보였으면 좋겠다아.','{vocativeLong}도 같이 창밖 볼래애?'];

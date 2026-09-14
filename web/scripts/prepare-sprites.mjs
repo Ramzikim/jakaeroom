@@ -5,14 +5,14 @@ const source=fs.existsSync(path.resolve('../jakae_sprite/png'))?path.resolve('..
 fs.mkdirSync(destination,{recursive:true});
 const sequences={};
 for(const file of fs.readdirSync(source)){
- const match=/^jakae_(idle|walk_left|walk_right|backwalk_left|backwalk_right|hop|shy|sit_idle|sit_snooze|sit_sleeploop|bath|strawberry)_(\d+)\.png$/.exec(file);
+ const match=/^jakae_(idle|walk_left|walk_right|backwalk_left|backwalk_right|hop|shy|sit_idle|sit_snooze|sit_sleeploop|bath|strawberry|window)_(\d+)\.png$/.exec(file);
  if(!match)continue;
  const bytes=fs.readFileSync(path.join(source,file));
  if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')continue;
  (sequences[match[1]]??=[]).push({url:'/jakae_sprite/'+file,number:Number(match[2]),width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)});
  if(source!==destination)fs.copyFileSync(path.join(source,file),path.join(destination,file));
 }
-for(const name of ['idle','walk_left','walk_right','backwalk_left','backwalk_right','hop','shy','sit_idle','sit_snooze','sit_sleeploop','bath','strawberry']){
+for(const name of ['idle','walk_left','walk_right','backwalk_left','backwalk_right','hop','shy','sit_idle','sit_snooze','sit_sleeploop','bath','strawberry','window']){
  if(!sequences[name]?.length)throw new Error('Missing sprite sequence: '+name);
  sequences[name].sort((a,b)=>a.number-b.number);
 }

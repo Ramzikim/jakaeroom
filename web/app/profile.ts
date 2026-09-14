@@ -22,7 +22,7 @@ export function parseProfile(value:unknown,year=kstYear()):ProfileInput{
 }
 export function resolveVocative(p:ProfileInput,year=kstYear()){
  const vip=vipVocativePool(p);if(vip.length)return vip[0];
- return year-p.birthYear<=30?(p.gender==='female'?'누냐':'형아'):(p.gender==='female'?'이모':'삼쵼');
+ return year-p.birthYear<=30?(p.gender==='female'?'누냐':'형아'):(p.gender==='female'?'이모':'삼촌');
 }
 export function makeProfile(input:ProfileInput,userId:string,createdAt=new Date().toISOString()):Profile{
  return {...input,nickname:input.nickname.trim(),userId,relationshipTier:classifyVip(input),vipVocativePool:vipVocativePool(input),vocative:resolveVocative(input),createdAt,updatedAt:new Date().toISOString()};
@@ -30,7 +30,7 @@ export function makeProfile(input:ProfileInput,userId:string,createdAt=new Date(
 export function interpolateDialogue(line:string,profile:Profile|null){
  const pool=profile?vipVocativePool(profile):[];
  const vocative=profile?resolveVocative(profile):'친구';
- const long:Record<string,string>={'누냐':'누냐아','형아':'형아아','이모':'이모오','삼쵼':'삼쵼','아빠':'아빠아','쭈인이':'엄마아','장미이모오':'장미이모오','친구':'친구야'};
+ const long:Record<string,string>={'누냐':'누냐아','형아':'형아아','이모':'이모오','삼촌':'삼촌','아빠':'아빠아','쭈인이':'엄마아','장미이모오':'장미이모오','친구':'친구야'};
  const vipVocative=pool.length?pool[Array.from(line).reduce((sum,c)=>sum+c.charCodeAt(0),0)%pool.length]:vocative;
  const tokens={vipVocative,nickname:profile?.nickname.trim()||'친구',vocative,vocativeLong:pool.length?pool[pool.length-1]:long[vocative]||vocative};
  if(pool.length)line=line.replace(/\{nickname\}\s*(?=\{vocative(?:Long)?(?:\|(?:subject|topic|with|object|and))?\})/g,'');
