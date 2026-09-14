@@ -20,8 +20,25 @@ for (const sourceScene of cabinet.getRoot().listScenes()) {
  importedScene.dispose();
 }
 const removed = new Set(['LOUNGE_SoftCushion','DEN_LoungePinkThrow','DEN_BedSmallDotCushion','DEN_SnackSidePot','DEN_SnackSideSoil','DEN_SnackSideFoliage']);
+// Clear the two trailing plants and the low picture overlapped by the display cabinet.
+for (const name of ['DEN_LeftWallCascade','DEN_WardrobeTrailing']) {
+ for (const part of ['Pot','Soil','Foliage']) removed.add(name+part);
+}
+removed.add('DECOR_NeutralArt_0');
 for (const node of doc.getRoot().listNodes()) {
  if (removed.has(node.getName())) node.dispose();
+ // Rounded wall bottoms previously only touched the floor's rounded top edge.
+ // Extend the lower bevel into the slab, keeping the wall tops and decor fixed.
+ if (['PH1_Wall_Left','PH1_Wall_Back'].includes(node.getName())) {
+  for (const primitive of node.getMesh().listPrimitives()) {
+   const positions=primitive.getAttribute('POSITION');
+   const bottom=positions.getMin([])[1], point=[];
+   for(let i=0;i<positions.getCount();i++) {
+    positions.getElement(i,point);
+    if(point[1]<bottom+.25){point[1]-=.18;positions.setElement(i,point);}
+   }
+  }
+ }
  if (['PH3_TV_Screen','PH3_TV_Body'].includes(node.getName())) {
   const black=doc.createMaterial('TV_WarmGray').setBaseColorFactor([.12,.11,.10,1]).setRoughnessFactor(.85).setMetallicFactor(0);
   for(const primitive of node.getMesh().listPrimitives()) primitive.setMaterial(black);

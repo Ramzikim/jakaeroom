@@ -42,7 +42,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   if(s.sequence==='sit_idle'){pixels=550;anchorY=20/522;}
   if(s.sequence==='sit_snooze'||s.sequence==='sit_sleeploop'){pixels=550;anchorY=16/494;}
   if(s.sequence==='bath'){pixels=510;anchorY=55/428;}
-  if(s.sequence==='strawberry'){pixels=439;anchorY=3/458;}
+  if(s.sequence==='strawberry'){pixels=439/.95;anchorY=3/458;}
   sprite.current!.scale.set(frame.width*1.4/pixels,frame.height*1.4/pixels,1);sprite.current!.center.set(anchorX,anchorY);
   carrier.current!.position.set(s.point[0],s.point[1],s.point[2]);positionRef.current.copy(carrier.current!.position);positionRef.current.y+=.7;
  });
@@ -66,5 +66,6 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   }}><div ref={bubble} className="bubble">{dialogue(testSpeech||speech)}</div></Html>}
  </group>;
 }
+
 
 
