@@ -32,7 +32,7 @@ export function interpolateDialogue(line:string,profile:Profile|null){
  const vocative=profile?resolveVocative(profile):'친구';
  const long:Record<string,string>={'누냐':'누냐아','형아':'형아아','이모':'이모오','삼촌':'삼촌','아빠':'아빠아','쭈인이':'엄마아','장미이모오':'장미이모오','친구':'친구야'};
  const vipVocative=pool.length?pool[Array.from(line).reduce((sum,c)=>sum+c.charCodeAt(0),0)%pool.length]:vocative;
- const tokens={vipVocative,nickname:profile?.nickname.trim()||'친구',vocative,vocativeLong:pool.length?pool[pool.length-1]:long[vocative]||vocative};
+ const tokens={vipVocative,visitorName:profile?.nickname.trim()||'친구',nickname:profile?.nickname.trim()||'친구',vocative,vocativeLong:pool.length?pool[pool.length-1]:long[vocative]||vocative};
  if(pool.length)line=line.replace(/\{nickname\}\s*(?=\{vocative(?:Long)?(?:\|(?:subject|topic|with|object|and))?\})/g,'');
  return renderTemplate(line,tokens);
 }

@@ -58,3 +58,5 @@ body,button,select,input,textarea{font-family:Paperlogy,'Malgun Gothic',sans-ser
 /* Base text without a component-specific size: 16px → 18px. */
 body{font-size:18px}
 .lp-floating{position:fixed;z-index:100;max-height:calc(100svh - 16px)}.lp-floating header{cursor:grab;touch-action:none;user-select:none}.lp-floating header:active{cursor:grabbing}.lp-floating header img{pointer-events:none}.lp-floating header button{cursor:pointer}
+
+.tv-news{width:calc(8em + 24px);max-width:calc(100vw - 24px);padding:10px 12px;border:2px solid #a5b7b5;border-radius:12px;background:#f1faf5f5;color:#425f60;font-size:16px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;box-shadow:0 3px 12px #354e4525}.tv-news strong{display:block;font-size:12px;margin-bottom:5px;letter-spacing:1px}.bubble.bubble{max-width:calc(8em + 24px);overflow-wrap:anywhere}

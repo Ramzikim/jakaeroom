@@ -25,15 +25,17 @@ const removedPlantPrefixes=['DEN_LeftWallCascade','DEN_WardrobeTrailing','DEN_Wa
 for (const node of doc.getRoot().listNodes()) if(removedPlantPrefixes.some(prefix=>node.getName().startsWith(prefix))) removed.add(node.getName());
 removed.add('DEN_WardrobeSidePlantLedge');
 removed.add('DECOR_NeutralArt_0');
+removed.add('PH1_Chair_Back');
+const chairLift=.415; // Seat top at 0.95, supporting the computer-sitting pose.
 for (const node of doc.getRoot().listNodes()) {
- if (removed.has(node.getName())) node.dispose();
- // Raise the seat by 18 cm; extend its pedestal while keeping its foot fixed.
- if (['PH1_Chair_Seat','PH1_Chair_Back'].includes(node.getName())) {
-  const p=node.getTranslation();node.setTranslation([p[0],p[1]+.18,p[2]]);
+ if (removed.has(node.getName())) {node.dispose();continue;}
+ // Preserve the cushion thickness and pedestal footprint; only extend its height.
+ if (node.getName()==='PH1_Chair_Seat') {
+  const p=node.getTranslation();node.setTranslation([p[0],p[1]+chairLift,p[2]]);
  }
  if (node.getName()==='PH1_Chair_Base') {
   const p=node.getTranslation(),s=node.getScale();
-  node.setTranslation([p[0],p[1]+.09,p[2]]).setScale([s[0],s[1]*(.52/.34),s[2]]);
+  node.setTranslation([p[0],p[1]+chairLift/2,p[2]]).setScale([s[0],s[1]*(1+chairLift/.34),s[2]]);
  }
  if (['PH3_Lounge_FloorSeat','PH3_Lounge_SeatCushion'].includes(node.getName())) {
   const p=node.getTranslation(),scale=node.getScale();

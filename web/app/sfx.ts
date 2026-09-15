@@ -32,6 +32,7 @@ export function frameSfx(sequence:string,frame:number,cycle:number):Sfx|null{
  if(sequence==='hop'&&cycle===0)return frame===3?'pop':frame===6?'land':null;
  if(sequence==='shy'&&cycle===0&&frame===0)return 'pop';
  if(sequence==='window'&&cycle===0&&frame===0)return 'sit';
+ if(sequence==='game'&&cycle===0&&frame===0)return 'sit';
  if(sequence==='sit_idle'&&cycle===0&&frame===0)return 'sit';
  if(sequence==='sit_snooze'&&cycle===0&&frame===0)return 'sleep';
  if(sequence==='strawberry'&&[3,5].includes(frame))return 'eat';

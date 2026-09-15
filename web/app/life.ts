@@ -1,5 +1,5 @@
 export type Point = [number, number];
-export type Mood = 'idle'|'walk'|'pet'|'berry'|'rest'|'sleep'|'wake'|'sit'|'bath'|'window';
+export type Mood = 'idle'|'walk'|'pet'|'berry'|'rest'|'sleep'|'wake'|'sit'|'bath'|'window'|'game';
 export const anchors: Record<string, Point> = {
   cushion:[0,.45], bathExit:[-2.5,1.05], bathDoor:[-1.5,1.05], center:[1.65,-.55], bed:[1.85,-2.65], window:[1.85,-3.1], desk:[3.15,-1.4],
   east:[2.65,.55], snack:[2.75,2.6], rug:[-.95,1.6], west:[-1.3,-.85], wardrobe:[-2.75,-2],

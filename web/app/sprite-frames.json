@@ -113,6 +113,32 @@
       "height": 428
     }
   ],
+  "game": [
+    {
+      "url": "/jakae_sprite/jakae_game_01.png",
+      "number": 1,
+      "width": 536,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_game_02.png",
+      "number": 2,
+      "width": 536,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_game_03.png",
+      "number": 3,
+      "width": 536,
+      "height": 554
+    },
+    {
+      "url": "/jakae_sprite/jakae_game_04.png",
+      "number": 4,
+      "width": 536,
+      "height": 554
+    }
+  ],
   "hop": [
     {
       "url": "/jakae_sprite/jakae_hop_01.png",
