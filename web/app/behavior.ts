@@ -3,6 +3,8 @@ import type {Tier} from './profile.ts';
 import {TV_CONTENT,GAME_DIALOGUE,GAME_LIMIT_DIALOGUE} from './media-dialogue.ts';
 import {anchors,route,floorPath,waitingLines,type Point} from './life.ts';
 export type Band='dawn'|'day'|'afternoon'|'night';
+export const TV_CHAR_SECONDS=.04;
+export const tvReactionTime=(script:string)=>script.length*TV_CHAR_SECONDS+.5;
 export type Action='pet'|'bed'|'bath'|'berry'|'cushion'|'window'|'basketBerry'|'move'|'tv'|'game';
 export type Sequence='idle'|'walk_left'|'walk_right'|'backwalk_left'|'backwalk_right'|'hop'|'shy'|'sit_idle'|'sit_snooze'|'sit_sleeploop'|'bath'|'strawberry'|'window'|'game';
 export const RULES={fps:8,sleepSeconds:300,bathSeconds:6,berrySeconds:5,petWindow:180,petThreshold:5,nightSit:.45,nightSleep:.03,daySit:.025,dawnSleep:.75};
@@ -88,8 +90,9 @@ export function tickLife(s:Life,dt:number,band:Band,lengths:Record<Sequence,numb
  s.now+=dt;if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];const elapsed=s.now-s.started;
  if(s.media){
   const elapsed=s.now-s.mediaStarted;
-  if(s.media==='tv'&&elapsed>=3&&!s.mediaReacted){s.mediaReacted=true;say(s,s.mediaReaction);}
-  if(elapsed>=(s.media==='tv'?10:8))endMedia(s,rng);
+  if(s.media==='tv'&&elapsed>=tvReactionTime(s.mediaNews)&&!s.mediaReacted){s.mediaReacted=true;say(s,s.mediaReaction);}
+  // Keep the existing reaction display duration, including for long broadcasts.
+  if(s.media==='tv'?elapsed>=10&&s.mediaReacted&&s.now>=s.speechUntil:elapsed>=8)endMedia(s,rng);
   return;
  }
  if(s.postBathPending&&s.now>=s.speechUntil&&s.now>=s.wetUntil&&!locked(s)){say(s,pick(postBathLines,rng));s.postBathPending=false;}

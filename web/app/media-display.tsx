@@ -3,7 +3,7 @@ import {useMemo,useRef,useState,type RefObject} from 'react';
 import {useFrame} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
-import type {Life} from './behavior';
+import {TV_CHAR_SECONDS,type Life} from './behavior';
 
 export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Life>,bubble:RefObject<HTMLDivElement|null>,character:RefObject<T.Sprite|null>,carrier:RefObject<T.Group|null>}){
  const textures=useTexture(['/jakae_sprite/monitor_01.png','/jakae_sprite/monitor_02.png','/jakae_sprite/monitor_03.png']);
@@ -15,7 +15,7 @@ export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Lif
  const [news,setNews]=useState(''),[monitor,setMonitor]=useState<number|null>(null),element=useRef<HTMLDivElement>(null);
  const tvGlow=useRef<T.Group>(null);
  useFrame(()=>{if(tvGlow.current)tvGlow.current.visible=life.current.media==='tv';});
- useFrame(()=>{const s=life.current;const next=s.media==='tv'?s.mediaNews.slice(0,Math.max(1,Math.floor((s.now-s.mediaStarted)/.04))):'';if(next!==news)setNews(next);const screen=s.media==='game'?s.monitor:null;if(screen!==monitor)setMonitor(screen);});
+ useFrame(()=>{const s=life.current;const next=s.media==='tv'?s.mediaNews.slice(0,Math.max(1,Math.floor((s.now-s.mediaStarted)/TV_CHAR_SECONDS))):'';if(next!==news)setNews(next);const screen=s.media==='game'?s.monitor:null;if(screen!==monitor)setMonitor(screen);});
  return <>
   <group ref={tvGlow} visible={false}>
    <pointLight position={[-.6,1.12,3.22]} color="#92c9ff" intensity={1.2} distance={2.4} decay={2}/>
