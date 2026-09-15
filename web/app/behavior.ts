@@ -1,6 +1,6 @@
 import {vipIdleLines,vipPettingLines,pettingLines,postBathLines,bathStartLines} from './dialogue.ts';
 import type {Tier} from './profile.ts';
-import {TV_NEWS,GAME_DIALOGUE,GAME_LIMIT_DIALOGUE} from './media-dialogue.ts';
+import {TV_CONTENT,GAME_DIALOGUE,GAME_LIMIT_DIALOGUE} from './media-dialogue.ts';
 import {anchors,route,floorPath,waitingLines,type Point} from './life.ts';
 export type Band='dawn'|'day'|'afternoon'|'night';
 export type Action='pet'|'bed'|'bath'|'berry'|'cushion'|'window'|'basketBerry'|'move'|'tv'|'game';
@@ -13,7 +13,7 @@ export const dreamLines=['딸기 케이크 먹는 꿈 꾸는 중이야아...','�
 export const refusalLines=['나중에 쓰다듬어어!','털 다 망가지겠어!','작애 털 눌리잖아아.','잠깐만 쉬었다가아!','그만그마안!','작애 좋아하는 거 알겠어~','나 찌그러져어.'];
 const wetLines=['젖은 솜이 됐어어...','몸이 무겁다아!','어서 말랐으면 좋겠어어.'];
 export function walkSequence(dx:number,dz:number):Sequence{const right=16*dx-12*dz,toward=12*dx+16*dz;return `${toward<0?'backwalk':'walk'}_${right<0?'left':'right'}`;}
-export function createLife(){return {media:null as null|'tv'|'game',mediaStarted:0,mediaNews:'',mediaReaction:'',mediaReacted:false,monitor:0,gameDate:'',gamePlayCount:{day:0,afternoon:0,night:0,dawn:0},relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
+export function createLife(){return {media:null as null|'tv'|'game',mediaStarted:0,mediaTitle:'',mediaNews:'',mediaReaction:'',mediaReacted:false,monitor:0,gameDate:'',gamePlayCount:{day:0,afternoon:0,night:0,dawn:0},relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
 export function animationFps(s:ReturnType<typeof createLife>){return s.sequence==='sit_idle'||s.sequence==='sit_sleeploop'?6:s.sequence.includes('walk')&&s.now<s.wetUntil?RULES.fps*.65:RULES.fps;}
 export type Life=ReturnType<typeof createLife>;
 export const locked=(s:Life)=>['hop','shy','bath','strawberry','sit_snooze','sit_sleeploop'].includes(s.sequence)||s.pending==='sleep';
@@ -45,7 +45,7 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
   }
   s.path=[];s.pending=null;s.cushionRequested=false;s.basketBerry=false;s.media=action;s.mediaStarted=s.now;s.mediaReacted=false;
   if(action==='tv'){
-   place(s,'rug','cushion');change(s,'sit_idle');s.speech='';const report=TV_NEWS[band][Math.floor(rng()*TV_NEWS[band].length)];s.mediaNews=report.news;s.mediaReaction=report.reaction;
+   place(s,'rug','cushion');change(s,'sit_idle');s.speech='';const report=TV_CONTENT[band][Math.floor(rng()*TV_CONTENT[band].length)];s.mediaTitle=report.title;s.mediaNews=report.script;s.mediaReaction=report.reaction;
   }else{
    s.point=[3.25,.95,-2.52];s.node='chair';change(s,'game');say(s,pick(GAME_DIALOGUE[(`monitor_0${s.monitor+1}`) as keyof typeof GAME_DIALOGUE],rng));
   }
