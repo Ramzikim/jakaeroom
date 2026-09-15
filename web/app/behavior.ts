@@ -80,7 +80,7 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
  }
  if(locked(s)||s.cushionRequested)return false;
  if(action==='cushion'){if(s.sequence==='sit_idle')return false;s.cushionRequested=true;s.pending='sit';s.seat='rug';s.path=[];s.destination='cushion';arrive(s,rng);return true;}
- if(action==='bed'){sitOrSleep(s,true,rng);return true;}
+ if(action==='bed'){s.cushionRequested=false;s.basketBerry=false;s.pending='sleep';s.seat='bed';s.path=[];s.destination='bed';arrive(s,rng);return true;}
  if(action==='bath'){place(s,'bath','bathExit');change(s,'bath');say(s,pick(bathStartLines,rng));return true;}
  ground(s);s.pending=null;
  if(action==='berry'){change(s,'strawberry');say(s,'딸기다아! 잘 먹을게애.');return true;}

@@ -26,7 +26,7 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
 }
 function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
-function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,disabled:boolean}){
+function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,onBed,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,onBed:()=>void,disabled:boolean}){
  const {scene}=useGLTF('/models/room-web.glb');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
@@ -46,6 +46,7 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
   </mesh>
   {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  {!disabled&&<mesh name="BedSleepHotspot" position={[.2,.64,-2.69]} onClick={e=>{e.stopPropagation();playSfx('ui');onBed();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[2.14,.85,2.44]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   <WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{document.body.style.cursor="pointer";}} onPointerOut={()=>{document.body.style.cursor="auto";}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
   <mesh position={[-.6,1.11,3.55]} onClick={e=>{e.stopPropagation();playSfx('ui');onTv();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.32,.77,.115]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><mesh position={[3.28,1.36,-3.64]} onClick={e=>{e.stopPropagation();playSfx('ui');onGame();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><planeGeometry args={[1.02,.62]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><AccentLamps power={a.lamp}/>
   <pointLight position={[-1.48,1.22,-3.47]} color="#ffc487" intensity={a.lamp} distance={4} decay={2}/>
@@ -122,7 +123,7 @@ export default function Room(){
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
-    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
+    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
    <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button></div>
