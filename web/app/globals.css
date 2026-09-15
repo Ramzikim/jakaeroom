@@ -64,3 +64,15 @@ body{font-size:18px}
 .stage{--dialogue-font-size:13px}.bubble.bubble,.tv-news{font-size:var(--dialogue-font-size);font-family:Paperlogy,'Malgun Gothic',sans-serif;font-weight:500}@media(max-width:600px){.stage{--dialogue-font-size:12px}}
 
 .lp-controls{display:flex;gap:6px;margin-top:12px;flex-shrink:0}.lp-playlist .lp-controls button{flex:1;min-width:0;padding:8px 3px;border:1px solid #e7d5bd;border-radius:12px;background:#fff8ee;color:inherit;font:inherit;white-space:nowrap;cursor:pointer}.lp-playlist .lp-controls button[aria-pressed=true]{background:#eee0cb;border-color:#bca185;box-shadow:inset 0 0 0 1px #bca185}.lp-playlist .lp-controls .lp-stop{background:#e9bbc0;border-color:#d3a0a8;color:#75444d}
+
+/* One continuous canvas; the header and dock float above the room. */
+main{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:100px minmax(0,1fr) auto;height:100svh}
+main>header{grid-area:1/1;pointer-events:none}
+main>.stage{grid-area:1/1/4/2;height:100%;min-height:0;min-width:0}
+main>footer{grid-area:3/1;z-index:2;pointer-events:none;min-height:0}
+main>footer .status{position:relative;left:auto;bottom:auto;transform:none;width:max-content;max-width:100%;margin:0 auto 8px}
+main>footer button,main>footer nav{pointer-events:auto}
+main>footer::before{content:'';position:absolute;inset:-35px 0 0;z-index:-1;background:linear-gradient(transparent,#17202a38 45%,#17202a70);pointer-events:none}
+main>.stage .view-controls{top:108px}
+main>footer .image-dock img,.view-controls img{filter:drop-shadow(0 5px 7px #17202a70)}
+@media(max-width:600px){main{grid-template-rows:83px minmax(0,1fr) auto}main>.stage .view-controls{top:91px}}
