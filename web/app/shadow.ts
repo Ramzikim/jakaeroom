@@ -6,6 +6,8 @@ export function shadowSurfaceY(x:number,z:number,footY:number){
  return Math.max(footY,rug?.034:0)+.008;
 }
 export function shadowStyle(sequence:string,frame:number){
+ // The desk chair needs a small contact patch under the hips, not a floor-sized ellipse.
+ if(sequence==='game')return {width:.30,height:.075,opacity:.14,blur:20,visible:true};
  const i=Math.max(0,Math.min(7,frame)),a=Math.floor(i),t=i-a;
  const lift=sequence==='hop'?hopLift[a]*(1-t)+hopLift[Math.min(7,a+1)]*t:0;
  const seated=sequence.startsWith('sit_')||sequence==='game';

@@ -49,7 +49,8 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
   let pixels=543,anchorX=.5,anchorY=0;
   if(s.sequence==='idle')pixels=467;
   if(s.sequence==='window'){pixels=550;anchorY=10/554;}
-  if(s.sequence==='game'){pixels=550;anchorX=250/536;anchorY=125/554;}
+  // Register the underside of the hips to the seat, not the bent thigh/feet.
+  if(s.sequence==='game'){pixels=550;anchorX=225/536;anchorY=120/554;}
   if(s.sequence==='hop'){pixels=467;anchorX=236/426;anchorY=20/716;}
   if(s.sequence==='sit_idle'){pixels=550;anchorY=20/522;if(s.node==='cushion'){anchorX=235/440;anchorY=127/522;}}
   if(s.sequence==='sit_snooze'||s.sequence==='sit_sleeploop'){pixels=550;anchorY=16/494;}
