@@ -1,4 +1,5 @@
 'use client';
+import {setRoomCursor} from './room-cursor';
 import {MediaDisplay} from './media-display';
 import {frameSfx,playSfx} from './sfx';
 import {shadowStyle,shadowSurfaceY} from './shadow';
@@ -72,7 +73,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
     vertexShader={`varying vec2 shadowUv; void main(){shadowUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`}
     fragmentShader={`varying vec2 shadowUv; uniform float alpha; uniform float softness; void main(){float r=length((shadowUv-.5)*2.0);float fade=1.0-smoothstep(1.0-softness,1.0,r);gl_FragColor=vec4(.16,.12,.10,alpha*fade);}`}/>
   </mesh>
-  <sprite ref={sprite} renderOrder={10} onClick={e=>{e.stopPropagation();if(!locked(life.current)||life.current.sequence==='sit_sleeploop')onPet();}} onPointerOver={()=>{document.body.style.cursor=!locked(life.current)||life.current.sequence==='sit_sleeploop'?'pointer':'auto';}} onPointerOut={()=>{document.body.style.cursor='auto';}}>
+  <sprite ref={sprite} renderOrder={10} onClick={e=>{e.stopPropagation();if(!locked(life.current)||life.current.sequence==='sit_sleeploop')onPet();}} onPointerOver={e=>{e.stopPropagation();setRoomCursor(!locked(life.current)||life.current.sequence==='sit_sleeploop'?'pet':'normal');}} onPointerOut={()=>{setRoomCursor('normal');}}>
    <spriteMaterial map={textures[0]} transparent alphaTest={.05} depthTest depthWrite toneMapped={false} onBeforeCompile={shader=>{
     // Preserve artwork projection; depth follows an upright plane rooted at the feet.
     // Fixed camera elevation: 12.25 vertical / 20 horizontal.

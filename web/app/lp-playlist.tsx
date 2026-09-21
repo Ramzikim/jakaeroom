@@ -1,4 +1,5 @@
 'use client';
+import {setRoomCursor} from './room-cursor';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {Html} from '@react-three/drei';
@@ -23,7 +24,7 @@ export function LpPlaylist({children}:{children:ReactNode}){
  function stop(){request.current++;audio.current?.pause();setPlaying(false);}
  function chooseMode(value:PlayMode){setMode(value);if(!playing)void play(selected);}
  return <group position={[2.15,.855,3.57]}>
-  <group onClick={e=>{e.stopPropagation();if(!position)move(e.nativeEvent.clientX+24,e.nativeEvent.clientY-300);setOpen(v=>!v);}} onPointerOver={e=>{e.stopPropagation();document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}>{children}</group>
+  <group onClick={e=>{e.stopPropagation();if(!position)move(e.nativeEvent.clientX+24,e.nativeEvent.clientY-300);setOpen(v=>!v);}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}>{children}</group>
   {position&&<Html><DomPortal>   <audio ref={audio} preload="none" onEnded={()=>{if(!playing)return;if(audio.current)audio.current.currentTime=0;void play(nextTrack(mode,selected,music.tracks.length));}} onError={()=>{setPlaying(false);setError('음원을 불러오지 못했어요.');}}/>
    <div ref={panel} className="lp-playlist lp-floating" style={{left:position.x,top:position.y}} hidden={!open} role="dialog" aria-label="작애의 플레이리스트" onKeyDown={e=>{if(e.key==='Escape')setOpen(false);}}>
     <header title="드래그해서 이동" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button'))return;e.preventDefault();drag.current={id:e.pointerId,x:e.clientX-position.x,y:e.clientY-position.y};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(drag.current?.id===e.pointerId)move(e.clientX-drag.current.x,e.clientY-drag.current.y);}} onPointerUp={e=>{if(drag.current?.id===e.pointerId){drag.current=null;e.currentTarget.releasePointerCapture(e.pointerId);}}} onPointerCancel={()=>{drag.current=null;}}><img src={music.icons.music} alt=""/><div><strong>작애의 플레이리스트</strong><small>듣고 싶은 곡을 골라줘어.</small></div><button aria-label="플레이리스트 닫기" onClick={()=>setOpen(false)}><img src={music.icons.out} alt=""/></button></header>

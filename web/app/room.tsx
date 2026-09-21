@@ -1,4 +1,5 @@
 'use client';
+import {setRoomCursor} from './room-cursor';
 import {Component, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {Html, OrbitControls, SoftShadows, useGLTF} from '@react-three/drei';
@@ -44,11 +45,11 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
   <mesh ref={ripple} visible={false} rotation={[-Math.PI/2,0,0]} raycast={()=>{}}>
    <ringGeometry args={[.87,1,48]}/><meshBasicMaterial color="#fff2da" transparent opacity={0} depthWrite={false} toneMapped={false}/>
   </mesh>
-  {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
-  {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
-  {!disabled&&<mesh name="BedSleepHotspot" position={[.2,.64,-2.69]} onClick={e=>{e.stopPropagation();playSfx('ui');onBed();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[2.14,.85,2.44]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
-  <WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{document.body.style.cursor="pointer";}} onPointerOut={()=>{document.body.style.cursor="auto";}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
-  <mesh position={[-.6,1.11,3.55]} onClick={e=>{e.stopPropagation();playSfx('ui');onTv();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><boxGeometry args={[1.32,.77,.115]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><mesh position={[3.28,1.36,-3.64]} onClick={e=>{e.stopPropagation();playSfx('ui');onGame();}} onPointerOver={()=>{document.body.style.cursor='pointer';}} onPointerOut={()=>{document.body.style.cursor='auto';}}><planeGeometry args={[1.02,.62]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><AccentLamps power={a.lamp}/>
+  {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('bath');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  {!disabled&&<mesh name="BedSleepHotspot" position={[.2,.64,-2.69]} onClick={e=>{e.stopPropagation();playSfx('ui');onBed();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[2.14,.85,2.44]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  <WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
+  <mesh position={[-.6,1.11,3.55]} onClick={e=>{e.stopPropagation();playSfx('ui');onTv();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[1.32,.77,.115]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><mesh position={[3.28,1.36,-3.64]} onClick={e=>{e.stopPropagation();playSfx('ui');onGame();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><planeGeometry args={[1.02,.62]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><AccentLamps power={a.lamp}/>
   <pointLight position={[-1.48,1.22,-3.47]} color="#ffc487" intensity={a.lamp} distance={4} decay={2}/>
   <pointLight position={[2.28,1.45,-3.48]} color="#ffe0b1" intensity={a.lamp*.8} distance={4}/>
  </group>;
@@ -119,7 +120,7 @@ export default function Room(){
  return <main style={{'--sky':a.bg} as React.CSSProperties}>
   <header><div className="wordmark"><h1 className="image-title"><img src="/title.png" alt="작애의 방 · JAKAE’S ROOM" width="2078" height="757"/></h1></div><div className="clock"><span className="live-dot"/>{a.name}<time>{String(now.hour).padStart(2,'0')}:{String(now.minute).padStart(2,'0')} <small>KST</small></time></div></header>
   <section className="stage" aria-label="작애가 살고 있는 3D 방">
-   <SceneError><Canvas orthographic shadows dpr={[1,1.5]} camera={{position:[12,13,16],zoom:60,near:.1,far:80}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=T.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;}}>
+   <SceneError><Canvas onPointerLeave={()=>setRoomCursor('normal')} orthographic shadows dpr={[1,1.5]} camera={{position:[12,13,16],zoom:60,near:.1,far:80}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=T.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;}}>
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
