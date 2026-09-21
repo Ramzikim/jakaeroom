@@ -1,4 +1,4 @@
-import {vipIdleLines,vipPettingLines,pettingLines,postBathLines,bathStartLines} from './dialogue.ts';
+import {vipIdleLines,pettingPool,postBathLines,bathStartLines} from './dialogue.ts';
 import type {Tier} from './profile.ts';
 import {TV_CONTENT,GAME_DIALOGUE,GAME_LIMIT_DIALOGUE} from './media-dialogue.ts';
 import {anchors,route,floorPath,waitingLines,type Point} from './life.ts';
@@ -12,7 +12,7 @@ export const positions={bed:[.2,.78,-2.65],bedRight:[1.85,0,-2.65],rug:[0,.235,.
 export const sitLines=['여기 앉아 있으니까 편하다아.','뭐하고 놀까아?','조금 심심해애.','딸기 생각나아...','가만히 있는 것도 좋아아.','누가 놀러 안 오나아.','잠깐 쉬는 중이야아.','작애 지금 멍때리고 있어어.'];
 export const dawnLines=['졸린데 잠이 안와아...','조금만 더 놀다가 잘래애.','눈은 감기는데에... 아직 안 잘래애.','새벽은 조용해서 좋은데에, 조금 심심해애.','잠깐만 돌아다니다가 다시 잘 거야아.','자야 하는데에... 괜히 놀고 싶어어.','꿈꾸기 전에 조금만 더 있을래애.'];
 export const dreamLines=['딸기 케이크 먹는 꿈 꾸는 중이야아...','엄청 신나는 꿈 꾸고 있어어!','미미랑 놀러 가는 꿈이야아.','딸기가 산만큼 나왔어어...','재밌는 꿈 꾸는 중이야아.','으음... 조금 슬픈 꿈이야아...','구름 위에서 뛰어노는 꿈이야아.','과자 잔뜩 먹는 꿈 꾸고 있어어.','쭈욱 자고 싶다아...','새근새근...'];
-export const refusalLines=['나중에 쓰다듬어어!','털 다 망가지겠어!','작애 털 눌리잖아아.','잠깐만 쉬었다가아!','그만그마안!','작애 좋아하는 거 알겠어~','나 찌그러져어.'];
+export const refusalLines=['잠깐만 쉬었다가 해애.','작애 털 다 눌리겠어어.','그만그마안~ 작애 납작해져어.','조금 있다가 또 해죠오.','작애 지금 너무 많이 쓰담받았어어.','헤헤, 이제 작애 차례 끝이야아.','손 잠깐 쉬자아. 작애도 쉬고 싶어어.','더 하면 작애 털 모양 이상해질 거야아.','작애 좋아하는 거 알겠으니까 잠깐만 쉬자아.','으으, 간지러워어. 이제 잠깐 스토옵!','또오? 작애 인기 너무 많은데에.','작애도 숨 좀 돌리자아.'];
 const wetLines=['젖은 솜이 됐어어...','몸이 무겁다아!','어서 말랐으면 좋겠어어.'];
 export function walkSequence(dx:number,dz:number):Sequence{const right=16*dx-12*dz,toward=12*dx+16*dz;return `${toward<0?'backwalk':'walk'}_${right<0?'left':'right'}`;}
 export function createLife(){return {media:null as null|'tv'|'game',mediaStarted:0,mediaTitle:'',mediaNews:'',mediaReaction:'',mediaReacted:false,monitor:0,gameDate:'',gamePlayCount:{day:0,afternoon:0,night:0,dawn:0},relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
@@ -84,7 +84,7 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
  if(action==='bath'){place(s,'bath','bathExit');change(s,'bath');say(s,pick(bathStartLines,rng));return true;}
  ground(s);s.pending=null;
  if(action==='berry'){change(s,'strawberry');say(s,'딸기다아! 잘 먹을게애.');return true;}
- change(s,rng()<.5?'hop':'shy');say(s,pick(s.relationshipTier==='normal'?pettingLines:vipPettingLines,rng));return true;
+ change(s,rng()<.5?'hop':'shy');say(s,pick(pettingPool(s.relationshipTier),rng));return true;
 }
 export function tickLife(s:Life,dt:number,band:Band,lengths:Record<Sequence,number>,rng=Math.random){
  s.now+=dt;if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];const elapsed=s.now-s.started;

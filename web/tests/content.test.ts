@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {withJosa,renderTemplate,type Particle} from '../app/josa.ts';
 import {makeProfile,interpolateDialogue} from '../app/profile.ts';
 import {letters,specialLetters,allLetters,selectLetter} from '../app/letters.ts';
-import {vipIdleLines,vipPettingLines,pettingLines,postBathLines} from '../app/dialogue.ts';
+import {vipIdleLines,pettingPool,postBathLines} from '../app/dialogue.ts';
 import {waitingLines} from '../app/life.ts';
 import {createLife,commandLife,tickLife,sitLines,dawnLines,dreamLines,refusalLines,type Sequence} from '../app/behavior.ts';
 for(const noun of ['누냐','형아','이모','삼촌','쭈인이','엄마아','아빠아','장미이모','유진 삼촌','유진 누냐']){
@@ -13,10 +13,10 @@ assert.equal(letters.length,28);assert.equal(specialLetters.length,4);assert.equ
 for(const band of ['dawn','day','afternoon','night'] as const){const pool=letters.filter(l=>l.timeBand===band);assert.equal(pool.length,7);for(let i=0;i<7;i++){assert.equal(pool[i].id,`${band}_0${i+1}`);assert.equal(selectLetter(band,undefined,()=>i/7).id,pool[i].id);assert.equal(pool[i].isSpecial,false);}assert.notEqual(selectLetter(band,pool[0].id,()=>0).id,pool[0].id);}
 assert.deepEqual(specialLetters.map(l=>l.unlockKey),['gift_5','petting_streak','quiet_dawn_companion','complete_memories']);
 for(const [id,text] of [['afternoon_04','{vocativeLong|subject}'],['afternoon_07','행복한 솜덩어리'],['night_02','{vocativeLong|with}'],['night_07','머리에 베고 자면 안돼에']])assert.ok(letters.find(l=>l.id===id)!.body.includes(text));
-assert.deepEqual([sitLines.length,dawnLines.length,dreamLines.length,refusalLines.length,postBathLines.length],[8,7,10,7,5]);
+assert.deepEqual([sitLines.length,dawnLines.length,dreamLines.length,refusalLines.length,postBathLines.length],[8,7,10,12,5]);
 const lengths=Object.fromEntries(['idle','walk_left','walk_right','backwalk_left','backwalk_right','hop','shy','sit_idle','sit_snooze','sit_sleeploop','bath','strawberry'].map(k=>[k,8])) as Record<Sequence,number>;
 const profiles=[makeProfile({nickname:'유진',gender:'female',birthYear:2000},'guest'),makeProfile({nickname:'쭈인',gender:'female',birthYear:1991},'guest'),makeProfile({nickname:'아빠',gender:'male',birthYear:1995},'guest'),makeProfile({nickname:'장미',gender:'female',birthYear:1990},'guest')];
-for(const profile of profiles){const vip=profile.relationshipTier!=='normal',idle=vip?vipIdleLines:waitingLines,pet=vip?vipPettingLines:pettingLines;
+for(const profile of profiles){const vip=profile.relationshipTier!=='normal',idle=vip?vipIdleLines:waitingLines,pet=pettingPool(profile.relationshipTier);
  for(let i=0;i<idle.length;i++){const s=createLife();s.relationshipTier=profile.relationshipTier;s.sequence='walk_left';const r=[0,.1,(i+.1)/idle.length];tickLife(s,.1,'day',lengths,()=>r.shift()!);assert.equal(s.speech,idle[i]);}
  for(let i=0;i<pet.length;i++){const s=createLife();s.relationshipTier=profile.relationshipTier;const r=[.1,(i+.1)/pet.length];assert.ok(commandLife(s,'pet',()=>r.shift()!));assert.equal(s.speech,pet[i]);}
  for(const line of [...idle,...pet,...allLetters.map(l=>l.body),...sitLines,...dawnLines,...dreamLines,...refusalLines,...postBathLines])assert.doesNotMatch(interpolateDialogue(line,profile),/[{}]|\(이\)가|\(은\)는|쭈인이모/);
