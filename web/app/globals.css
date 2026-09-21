@@ -84,9 +84,11 @@ main>footer .image-dock img,.view-controls img{filter:drop-shadow(0 5px 7px #172
  body{cursor:url('/cursors/normal.png?v=2') 7 6,auto}
  .stage canvas{cursor:url('/cursors/normal.png?v=2') 7 6,auto}
  button:not(:disabled),a,select,summary,[role="button"],.lp-playlist li,.lp-playlist .lp-controls button,.lp-floating header button{cursor:url('/cursors/click.png?v=2') 18 7,pointer}
- button:disabled{cursor:url('/cursors/normal.png?v=2') 7 6,default}
+ button:disabled{cursor:url('/cursors/click.png?v=2') 18 7,pointer}
  body[data-room-cursor="click"] .stage canvas{cursor:url('/cursors/click.png?v=2') 18 7,pointer}
  body[data-room-cursor="pet"] .stage canvas{cursor:url('/cursors/pet.png?v=2') 12 14,pointer}
  body[data-room-cursor="gift"] .stage canvas{cursor:url('/cursors/gift.png?v=2') 25 25,pointer}
  body[data-room-cursor="bath"] .stage canvas{cursor:url('/cursors/bath.png?v=2') 25 25,pointer}
 }
+
+
