@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const exports={};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../app/coin-events.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports,require:()=>({}),process:{env:{NODE_ENV:'test'}}});
+const queue=exports.queueCoinOperation,order=[];let release;
+const first=queue(async()=>{order.push('running');await new Promise(r=>{release=r;});});
+const normal=queue(async()=>{order.push('background');});
+const purchase=queue(async()=>{order.push('purchase');throw Error('expected rejection');},true);
+assert.deepEqual(order,['running']);release();await Promise.all([first,normal,purchase]);
+assert.deepEqual(order,['running','purchase','background']);
+await queue(async()=>order.push('next'));assert.equal(order.at(-1),'next');
+console.log('PASS: active request preserved, purchase priority, serialization, failure recovery');

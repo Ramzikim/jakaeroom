@@ -20,6 +20,7 @@ export async function POST(request:Request){
   if(input.route==='homeshopping'&&!['day','afternoon','night','dawn'].includes(input.band??''))return json({error:'invalid_request'},400);
   const service=giftsFor(user.id);
   const result=input.route==='cabinet_order'?await service.purchaseGift(gift.id):await service.purchaseHomeshoppingGift(gift.id,input.band!);
+  if(!result.ok)return json(result);
   const state=await loadProgression(user.id);
   return json({...result,progression:state.progression});
  }catch{return json({error:'unavailable'},503);}

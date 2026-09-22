@@ -7,10 +7,14 @@ export type CoinUpdate={userId:string;result:ProgressionResult;kind:CoinRewardKi
 const listeners=new Set<(event:CoinUpdate)=>void>();
 export function subscribeCoins(listener:(event:CoinUpdate)=>void){listeners.add(listener);return()=>{listeners.delete(listener);};}
 export function publishCoins(event:CoinUpdate){listeners.forEach(listener=>listener(event));}
-let pending=Promise.resolve();
-export function queueCoinOperation(operation:()=>Promise<void>){
- pending=pending.then(operation).catch(()=>{if(process.env.NODE_ENV==='development')console.warn('Heart coin reward could not be confirmed');});
- return pending;
+const operations:{run:()=>Promise<void>;done:()=>void}[]=[];
+let running=false;
+async function drainOperations(){
+ if(running)return;running=true;
+ try{while(operations.length){const task=operations.shift()!;try{await task.run();}catch{if(process.env.NODE_ENV==='development')console.warn('Heart coin reward could not be confirmed');}finally{task.done();}}}finally{running=false;}
+}
+export function queueCoinOperation(operation:()=>Promise<void>,priority=false){
+ return new Promise<void>(resolve=>{const task={run:operation,done:resolve};if(priority)operations.unshift(task);else operations.push(task);void drainOperations();});
 }
 // Serialize writes and balance reads so older responses cannot roll the HUD back.
 export function requestCoins(input:{kind:Exclude<CoinRewardKind,'photo'|'special_letter'>;action?:string;letterId?:string;eventId?:string},origin?:CoinOrigin){

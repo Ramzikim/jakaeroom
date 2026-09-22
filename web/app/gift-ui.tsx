@@ -35,7 +35,8 @@ export function GiftProvider({children}:{children:ReactNode}){
  const owned=progression?.owned_gift_ids??[];
  const offer=(gift:Gift,band?:Band)=>{if(!gift.isPurchasable||owned.includes(gift.id))return;setError('');setConfirmation({gift,band});playSfx('ui');};
  async function purchase(){
-  if(!confirmation||busy.current)return;busy.current=true;setPending(true);setError('');
+  if(!confirmation||busy.current)return;busy.current=true;setPending(true);
+  setError(progression&&confirmation.gift.price!==null&&progression.heart_coin_balance<confirmation.gift.price?'하트코인이 부족해요.':'');
   const selected=confirmation;
   await queueCoinOperation(async()=>{
    try{
@@ -47,13 +48,13 @@ export function GiftProvider({children}:{children:ReactNode}){
     if(selected.gift.acquisitionType==='cabinet_order'&&shoppingUnlocked(result.ownedGiftIds))setNotice(true);
     setConfirmation(null);playSfx('ui');
    }catch{setError('구매하지 못했어요. 다시 시도해 주세요.');}
-  });busy.current=false;setPending(false);
+  },true);busy.current=false;setPending(false);
  }
  return <Context.Provider value={{owned,collectedPhotoIds:progression?.collected_photo_ids??[],confirmId:confirmation?.gift.id??null,openCabinet:()=>{playSfx('ui');setCabinet(true);},offer}}>{children}
  {cabinet&&<GiftDialog title="작애의 선물 장식장" onClose={()=>setCabinet(false)}><div className="gift-grid">{GIFT_REGISTRY.map(gift=>{const has=owned.includes(gift.id),copy=GIFT_COPY[gift.id];return <article className="gift-card" key={gift.id}>
  <div className="gift-thumbnail">{has?<img src={gift.imagePath+(gift.id==='starlight_mailbox'?'?v=2':'')} alt={gift.name}/>:<span role="img" aria-label="미보유 선물">🔒</span>}</div><h3>{gift.name}</h3><GiftPrice price={gift.price}/><p>{has?copy.description:copy.hint}</p>
  {has?<strong className="gift-owned">보유 중</strong>:gift.acquisitionType==='cabinet_order'?<button onClick={()=>offer(gift)}>구매하기</button>:null}</article>;})}</div><button className="gift-done" onClick={()=>setCabinet(false)}>닫기</button></GiftDialog>}
- {confirmation&&<GiftDialog title={`${confirmation.gift.name}를 작애에게 선물할까요?`} small blocked={pending} onClose={()=>{if(!busy.current)setConfirmation(null);}}><div className="gift-confirm-body"><GiftPrice price={confirmation.gift.price}/>{error&&<p role="alert">{error}</p>}<div className="gift-confirm-actions"><button disabled={pending} onClick={()=>setConfirmation(null)}>아니요</button><button disabled={pending} onClick={()=>void purchase()}>{pending?'선물하는 중…':'선물할게요!'}</button></div></div></GiftDialog>}
+ {confirmation&&<GiftDialog title={`${confirmation.gift.name}를 작애에게 선물할까요?`} small blocked={pending} onClose={()=>{if(!busy.current)setConfirmation(null);}}><div className="gift-confirm-body"><GiftPrice price={confirmation.gift.price}/>{error&&<p role="alert">{error}</p>}<div className="gift-confirm-actions"><button disabled={pending} onClick={()=>setConfirmation(null)}>아니요</button><button disabled={pending} onClick={()=>void purchase()}>{pending?(error==='하트코인이 부족해요.'?'잔액 확인 중…':'선물하는 중…'):'선물할게요!'}</button></div></div></GiftDialog>}
  {notice&&createPortal(<div className="gift-unlock" role="status">이제 TV에서도 작애 선물을 살 수 있어요!</div>,document.querySelector('dialog[open]')??document.body)}
  </Context.Provider>;
 }
