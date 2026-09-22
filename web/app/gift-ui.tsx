@@ -14,7 +14,7 @@ export function GiftPrice({price}:{price:number|null}){return <span className="g
 function GiftDialog({title,onClose,children,small=false,blocked=false}:{title:string;onClose:()=>void;children:ReactNode;small?:boolean;blocked?:boolean}){
  const ref=useRef<HTMLDialogElement>(null);
  useEffect(()=>{const previous=document.activeElement as HTMLElement|null;ref.current?.showModal();return()=>previous?.focus();},[]);
- return createPortal(<dialog ref={ref} className={`gift-modal ${small?'gift-confirm':''}`} aria-label={title} onCancel={e=>{if(blocked)e.preventDefault();}} onClose={onClose} onClick={e=>{if(!blocked&&e.target===ref.current)onClose();}}>
+ return createPortal(<dialog ref={ref} data-collection-ui className={`gift-modal ${small?'gift-confirm':''}`} aria-label={title} onCancel={e=>{if(blocked)e.preventDefault();}} onClose={onClose} onClick={e=>{if(!blocked&&e.target===ref.current)onClose();}}>
  <div className="gift-heading"><h2>{title}</h2><button disabled={blocked} aria-label="선물 팝업 닫기" onClick={onClose}>×</button></div>{children}</dialog>,document.body);
 }
 export function GiftProvider({children}:{children:ReactNode}){

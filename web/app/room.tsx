@@ -47,11 +47,12 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
  const wardrobePending=useRef(false);
  async function clickPhotoProp(action:'wardrobe'|'drawer',origin:{x:number;y:number}){
   if(wardrobePending.current||document.querySelector('dialog[open]'))return;
-  wardrobePending.current=true;playSfx('ui');
+  wardrobePending.current=true;playSfx('ui');showPropMessage('추억을 찾아보고 있어요…');
   try{
    await requestLetterEvent(action==='drawer'?'drawer':'interrupt');
    const result=sleeping?undefined:await recordPhotoAction(action,origin);
-   if(!result?.photoId)showPropMessage(result?.error?'사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.':photoPropMessage(action,result?.progression?.collected_photo_ids??[]));
+   if(result?.photoId)showPropMessage('');
+   else showPropMessage(result?.error?'사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.':photoPropMessage(action,result?.progression?.collected_photo_ids??[]));
   }catch{showPropMessage('잠시 후 다시 눌러 주세요.');}finally{wardrobePending.current=false;}
  }
  const ripple=useRef<T.Mesh<T.RingGeometry,T.MeshBasicMaterial>>(null),rippleAge=useRef(1);
@@ -118,6 +119,7 @@ function Room(){
  const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
  const dialogue=useProfileDialogue();
  const letterPending=useRef(false);
+ const [letterLoading,setLetterLoading]=useState(false);
  const [collectionOpen,setCollectionOpen]=useState(false);
  const letterReturnFocus=useRef<HTMLElement|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),letterButton=useRef<HTMLButtonElement>(null),positionRef=useRef(new T.Vector3(1.65,.7,-.55));
@@ -144,15 +146,15 @@ function Room(){
  const openLetter=async(rereadId?:string)=>{
   if(dialog.current?.open||letterPending.current||(!rereadId&&document.querySelector('dialog[open]')))return false;
   letterReturnFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
-  letterPending.current=true;
+  letterPending.current=true;setLetterLoading(true);dialog.current?.showModal();
   try{
    const rect=letterButton.current?.getBoundingClientRect();
    const result=await requestLetterEvent(rereadId?'reread':'regular',rereadId,rect?{x:rect.left+rect.width/2,y:rect.top}:undefined);
-   if(!result)return false;
+   if(!result){dialog.current?.close();return false;}
    storeCounts({...readCounts(null),...result.state.counts,date:result.state.date});
-   const next=result.letterId?getLetter(result.letterId):null;if(!next)return false;
-   setLetter(next);dialog.current?.showModal();playSfx('paper');return true;
-  }finally{letterPending.current=false;}
+   const next=result.letterId?getLetter(result.letterId):null;if(!next){dialog.current?.close();return false;}
+   setLetter(next);playSfx('paper');return true;
+  }finally{letterPending.current=false;setLetterLoading(false);}
  };
  // Feature-detected agent access uses the same visible controls and local data.
  useEffect(()=>{
@@ -175,12 +177,12 @@ function Room(){
   </section>
   <footer><div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
-   <button aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
+   <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
    <PlayMenu disabled={!ready||busy} onAction={act}/>
    <button aria-label="도감 보기" onClick={()=>{playSfx('ui');setCollectionOpen(true);}}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
   </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
   <PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
-  <dialog ref={dialog} className="letter" onClose={()=>{(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
+  <dialog ref={dialog} data-collection-ui aria-busy={letterLoading} className="letter" onClose={()=>{(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letterLoading?'편지를 가져오고 있어요…':letter.title}</h2><p className="letter-body">{letterLoading?'잠시만 기다려 주세요.':dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
  </main>;
 }
 

@@ -10,11 +10,15 @@ export type LetterResult=ProgressionResult & {letterId:string|null;reason?:strin
 // userId must come from auth.getUser, never from request JSON.
 export async function letterEvent(userId:string,action:LetterAction,eventId:string,rereadId?:string):Promise<LetterResult>{
  const db=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.SUPABASE_SERVICE_ROLE_KEY!,{auth:{persistSession:false,autoRefreshToken:false}});
- const {data:profile,error}=await db.from('profiles').select('nickname,gender,birthYear').eq('userId',userId).maybeSingle();if(error)throw error;
- const {data:band,error:bandError}=await db.rpc('room_time_band',{p_user_id:userId});if(bandError)throw bandError;
+ const [profileResult,bandResult,initial]=await Promise.all([
+  db.from('profiles').select('nickname,gender,birthYear').eq('userId',userId).maybeSingle(),
+  db.rpc('room_time_band',{p_user_id:userId}),progressionFor(userId).loadProgression(),
+ ]);
+ if(profileResult.error)throw profileResult.error;if(bandResult.error)throw bandResult.error;
+ const profile=profileResult.data,band=bandResult.data;
  const tier=profile?classifyVip(parseProfile(profile)):'normal';
  for(let attempt=0;attempt<12;attempt++){
-  const loaded=await progressionFor(userId).loadProgression();
+  const loaded=attempt===0?initial:await progressionFor(userId).loadProgression();
   const state=loaded.progression.letter_state??emptyLetterState();
   const next=advanceLetters(state,loaded.progression.collected_letter_ids,action,Date.now(),tier,rereadId,band);
   const {data,error}=await db.rpc('commit_letter_event',{p_user_id:userId,p_version:state.version,p_state:next.state,p_grants:next.grants,p_event_id:eventId,p_letter_id:next.letterId});
