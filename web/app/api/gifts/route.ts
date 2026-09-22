@@ -21,7 +21,9 @@ export async function POST(request:Request){
   const service=giftsFor(user.id);
   const result=input.route==='cabinet_order'?await service.purchaseGift(gift.id):await service.purchaseHomeshoppingGift(gift.id,input.band!);
   if(!result.ok)return json(result);
-  const state=await loadProgression(user.id);
-  return json({...result,progression:state.progression});
+  // The purchase has committed. A failed follow-up read must never report a failed purchase.
+  if('progression' in result)return json(result);
+  try{const state=await loadProgression(user.id);return json({...result,progression:state.progression});}
+  catch{return json(result);}
  }catch{return json({error:'unavailable'},503);}
 }

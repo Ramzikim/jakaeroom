@@ -41,4 +41,11 @@ result=advanceLetters(emptyLetterState(),[...ids,'special_01','special_02','spec
 for(const tier of ['vip_owner','vip_dad','vip_jangmi'] as const){result=advanceLetters(emptyLetterState(),ids.slice(0,27),'regular',base,tier);assert.deepEqual(result.state.vipIds,[tier]);assert.equal(result.owned.length,28);assert(!result.owned.includes(tier));assert.deepEqual(advanceLetters(JSON.parse(JSON.stringify(result.state)),result.owned,'load',base,tier).state.vipIds,[tier]);assert.deepEqual(advanceLetters(emptyLetterState(),ids.slice(0,27),'load',base,tier).state.vipIds,[]);}
 assert.deepEqual(advanceLetters(emptyLetterState(),ids,'load',base).state.vipIds,[]);
 assert.equal(allLetters.length,32);assert.equal(vipLetters.length,3);assert(!hasAllRegularLetters(vipLetters.map(l=>l.id)));
-console.log('PASS: sequence, four KST band quotas, reread, migration, drawer, 15-minute pet streak, uninterrupted dawn sleep, 31→32, mailbox and isolated VIP unlocks');
+// Queue/network latency must not change the gaps between physical drawer clicks.
+state=emptyLetterState();owned=['letter_21'];
+for(let i=0;i<10;i++){result=advanceLetters(state,owned,'drawer',base+50_000+i*5_000,'normal',undefined,undefined,base+i*500);state=result.state;owned=result.owned;}
+assert(owned.includes('special_01'));
+state=advanceLetters(emptyLetterState(),['letter_21'],'drawer',base+10_000,'normal',undefined,undefined,base).state;
+assert.equal(advanceLetters(state,['letter_21'],'drawer',base+20_000,'normal',undefined,undefined,base+2001).state.drawer?.count,1);
+assert.equal(advanceLetters(state,['letter_21'],'drawer',base+20_000,'normal',undefined,undefined,base-1).state.drawer?.count,1);
+console.log('PASS: sequence, four KST band quotas, reread, migration, drawer (including queued clicks), 15-minute pet streak, uninterrupted dawn sleep, 31→32, mailbox and isolated VIP unlocks');

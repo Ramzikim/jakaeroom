@@ -18,7 +18,14 @@ export function progressionFor(userId:string){
  };
  return {
   ensureProgression:()=>mutate('ensure'),
-  loadProgression:()=>mutate('ensure'),
+  loadProgression:async():Promise<ProgressionResult>=>{
+   // Read-only on the common path: no row lock, JSON receipt transfer, or UPDATE.
+   const {data,error}=await db.from('user_progression').select('user_id,heart_coin_balance,last_passive_reward_at,daily_passive_earned,collected_photo_ids,collected_letter_ids,owned_gift_ids,purchased_gift_ids,daily_photo_total,daily_photo_category_counts,daily_interaction_reward_counts,progression_date,letter_state').eq('user_id',userId).maybeSingle();
+   if(error)throw error;
+   const today=new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10);
+   if(!data||data.progression_date!==today)return mutate('ensure');
+   return {ok:true,newlyCollected:false,delta:0,progression:data};
+  },
   resetDailyCountersIfNeeded:()=>mutate('reset'),
   addHeartCoins:(amount:number,reason:RewardReason)=>{
    const expected=reason.kind==='daily_login'?HEART_COIN.dailyLogin:reason.kind==='passive'?HEART_COIN.passiveReward:HEART_COIN.interaction;

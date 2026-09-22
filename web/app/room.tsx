@@ -12,7 +12,7 @@ import {getLetter} from './letters';
 import {requestLetterEvent} from './letter-events';
 import {recordPhotoAction} from './photo-acquisition';
 import {photoPropMessage} from '../lib/photos';
-import {PropMessage,showPropMessage} from './prop-message';
+import {PropMessage,showPropMessage,updatePropMessage,isPropMessageCurrent} from './prop-message';
 import {AdminPanel,useAdminTools} from './admin-tools';
 import {HelpModal} from './help-modal';
 import {Bgm} from './bgm';
@@ -45,16 +45,20 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
  const {scene}=useGLTF('/models/room-web.glb?v=bare-left-wall-v001');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
- const wardrobePending=useRef(false);
+ const photoPending=useRef({wardrobe:false,drawer:false});
  async function clickPhotoProp(action:'wardrobe'|'drawer',origin:{x:number;y:number}){
-  if(wardrobePending.current||document.querySelector('dialog[open]'))return;
-  wardrobePending.current=true;playSfx('ui');showPropMessage(photoPropMessage(action,gifts.collectedPhotoIds));
+  if(document.querySelector('dialog[open]'))return;
+  playSfx('ui');const messageId=showPropMessage(photoPropMessage(action,gifts.collectedPhotoIds));
+  // Every accepted click participates in the drawer streak, even while a photo request is pending.
+  const letter=requestLetterEvent(action==='drawer'?'drawer':'interrupt');
+  if(photoPending.current[action])return;
+  photoPending.current[action]=true;
   try{
-   await requestLetterEvent(action==='drawer'?'drawer':'interrupt');
-   const result=sleeping?undefined:await recordPhotoAction(action,origin);
-   if(result?.photoId)showPropMessage('');
-   else if(result?.error)showPropMessage('사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.');
-  }catch{showPropMessage('잠시 후 다시 눌러 주세요.');}finally{wardrobePending.current=false;}
+   await letter;
+   const result=sleeping?undefined:await recordPhotoAction(action,origin,()=>isPropMessageCurrent(messageId));
+   if(result?.photoId)updatePropMessage(messageId,'');
+   else if(result?.error)updatePropMessage(messageId,'사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.');
+  }catch{updatePropMessage(messageId,'잠시 후 다시 눌러 주세요.');}finally{photoPending.current[action]=false;}
  }
  const ripple=useRef<T.Mesh<T.RingGeometry,T.MeshBasicMaterial>>(null),rippleAge=useRef(1);
  useFrame((_,delta)=>{

@@ -5,27 +5,28 @@ import type {Session} from '@supabase/supabase-js';
 import {HEART_COIN} from '../lib/progression';
 import {kstDate} from './behavior';
 import {requestCoins,subscribeCoins,type CoinUpdate} from './coin-events';
+import {useProgression} from './progression-store';
 const coinIcon='/heart_coin.png?v=heart-coin-1';
 
 export function HeartCoinHud({session,ready}:{session:Session|null;ready:boolean}){
- const [balance,setBalance]=useState<number|null>(null),[display,setDisplay]=useState(0),[queue,setQueue]=useState<(CoinUpdate&{id:number})[]>([]);
- const hud=useRef<HTMLSpanElement>(null),shown=useRef(0),serial=useRef(0),revision=useRef(0);
+ const shared=useProgression();
+ const balance=!session?0:shared.userId===session.user.id?shared.progression?.heart_coin_balance??null:null;
+ const [display,setDisplay]=useState(0),[queue,setQueue]=useState<(CoinUpdate&{id:number})[]>([]);
+ const hud=useRef<HTMLSpanElement>(null),shown=useRef(0),serial=useRef(0);
  const active=queue[0];
  useEffect(()=>{
-  let live=true;setBalance(session?null:0);setDisplay(0);shown.current=0;setQueue([]);
+  let live=true;setDisplay(0);shown.current=0;setQueue([]);
   if(!ready||!session)return;
   const userId=session.user.id;
-  const unsubscribe=subscribeCoins(event=>{if(!live||event.userId!==userId)return;revision.current++;setBalance(event.result.progression.heart_coin_balance);
+  const unsubscribe=subscribeCoins(event=>{if(!live||event.userId!==userId)return;
    if(event.result.ok&&event.result.delta>0)setQueue(q=>[...q,{...event,id:++serial.current}]);
   });
-  const refresh=async()=>{const version=revision.current;try{const response=await fetch('/api/progression',{headers:{Authorization:`Bearer ${session.access_token}`},cache:'no-store'});if(!response.ok)return;const data=await response.json();if(live&&version===revision.current)setBalance(data.progression.heart_coin_balance);}catch{/* Keep last confirmed balance. */}};
-  void refresh().then(()=>{if(live)void requestCoins({kind:'daily_login'});});
+  void requestCoins({kind:'daily_login'});
   const passive=setInterval(()=>void requestCoins({kind:'passive'}),HEART_COIN.passiveIntervalMs);
   let date=kstDate();
-  const poll=setInterval(()=>{void refresh();if(date!==kstDate()){date=kstDate();void requestCoins({kind:'daily_login'});}},15000);
-  window.addEventListener('focus',refresh);
-  return()=>{live=false;unsubscribe();clearInterval(passive);clearInterval(poll);window.removeEventListener('focus',refresh);};
- },[session?.user.id,session?.access_token,ready]);
+  const poll=setInterval(()=>{if(date!==kstDate()){date=kstDate();void requestCoins({kind:'daily_login'});}},30000);
+  return()=>{live=false;unsubscribe();clearInterval(passive);clearInterval(poll);};
+ },[session?.user.id,ready]);
  useEffect(()=>{
   if(balance===null)return;
   const from=shown.current,start=performance.now();let frame=0;

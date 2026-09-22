@@ -10,7 +10,7 @@ export const emptyLetterState=():LetterState=>({version:0,date:'',counts:{},vipI
 export function normalizeLetterIds(ids:readonly string[]){return [...new Set(ids.map(id=>{const i=legacyLetterIds.indexOf(id);return i<0?id:letters[i].id;}))];}
 export function letterClock(now:number){const date=new Date(now);return {date:kstDate(date),band:kst(date).period};}
 // Server time and a server-loaded profile are the only inputs for eligibility.
-export function advanceLetters(previous:LetterState,collected:readonly string[],action:LetterAction,now:number,tier:Tier='normal',rereadId?:string,bandOverride?:Band){
+export function advanceLetters(previous:LetterState,collected:readonly string[],action:LetterAction,now:number,tier:Tier='normal',rereadId?:string,bandOverride?:Band,drawerClickedAt=now){
  const state=structuredClone(previous),clock=letterClock(now),owned=normalizeLetterIds(collected),grants:string[]=[];
  if(bandOverride)clock.band=bandOverride;
  let letterId:string|null=null,reason:string|null=null;
@@ -28,7 +28,7 @@ export function advanceLetters(previous:LetterState,collected:readonly string[],
  if(action==='reread'){if(rereadId&&(owned.includes(rereadId)||state.vipIds.includes(rereadId)))letterId=rereadId;else reason='not_collected';}
  if(action==='drawer'){
   if(!owned.includes('letter_21')||owned.includes('special_01'))delete state.drawer;
-  else{const old=state.drawer;state.drawer={count:old&&now-old.at<=2000?old.count+1:1,at:now};if(state.drawer.count>=10){grant('special_01');delete state.drawer;}}
+  else{const old=state.drawer;state.drawer={count:old&&drawerClickedAt>=old.at&&drawerClickedAt-old.at<=2000?old.count+1:1,at:drawerClickedAt};if(state.drawer.count>=10){grant('special_01');delete state.drawer;}}
  }
  if(!owned.includes('special_02')){
   const pet=state.pet;

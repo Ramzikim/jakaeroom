@@ -7,8 +7,9 @@ for(const category of categories){
  const files=(await fs.readdir(source)).filter(f=>/\.(png|jpe?g|webp)$/i.test(f)).sort();
  await fs.mkdir(target,{recursive:true});
  for(const [index,file] of files.entries()){
-  const output=file.replace(/\.[^.]+$/,'.webp');
-  await sharp(`${source}/${file}`).webp({quality:80}).toFile(`${target}/${output}`);
+  const metadata=await sharp(`${source}/${file}`).metadata();
+  const output=file.replace(/\.[^.]+$/,metadata.orientation&&metadata.orientation!==1?'-upright.webp':'.webp');
+  await sharp(`${source}/${file}`).rotate().webp({quality:80}).toFile(`${target}/${output}`);
   catalog.push({id:`${category}_${String(index+1).padStart(2,'0')}`,category,assetPath:`/library/photo_framed/${category}/${output}`,available:true});
  }
 }

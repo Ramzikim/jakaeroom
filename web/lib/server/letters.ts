@@ -8,7 +8,7 @@ import {giftsFor} from './gifts';
 import type {ProgressionResult} from '../progression';
 export type LetterResult=ProgressionResult & {letterId:string|null;reason?:string|null;duplicate?:boolean};
 // userId must come from auth.getUser, never from request JSON.
-export async function letterEvent(userId:string,action:LetterAction,eventId:string,rereadId?:string):Promise<LetterResult>{
+export async function letterEvent(userId:string,action:LetterAction,eventId:string,rereadId?:string,clickedAt?:number):Promise<LetterResult>{
  const db=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.SUPABASE_SERVICE_ROLE_KEY!,{auth:{persistSession:false,autoRefreshToken:false}});
  const [profileResult,bandResult,initial]=await Promise.all([
   db.from('profiles').select('nickname,gender,birthYear').eq('userId',userId).maybeSingle(),
@@ -20,7 +20,9 @@ export async function letterEvent(userId:string,action:LetterAction,eventId:stri
  for(let attempt=0;attempt<12;attempt++){
   const loaded=attempt===0?initial:await progressionFor(userId).loadProgression();
   const state=loaded.progression.letter_state??emptyLetterState();
-  const next=advanceLetters(state,loaded.progression.collected_letter_ids,action,Date.now(),tier,rereadId,band);
+  const next=advanceLetters(state,loaded.progression.collected_letter_ids,action,Date.now(),tier,rereadId,band,clickedAt);
+  const needsMailbox=hasAllRegularLetters(next.owned)&&!loaded.progression.owned_gift_ids.includes('starlight_mailbox');
+  if(!next.grants.length&&!needsMailbox&&JSON.stringify(next.state)===JSON.stringify(state)&&JSON.stringify(next.owned)===JSON.stringify(loaded.progression.collected_letter_ids))return {...loaded,letterId:next.letterId,reason:next.reason};
   const {data,error}=await db.rpc('commit_letter_event',{p_user_id:userId,p_version:state.version,p_state:next.state,p_grants:next.grants,p_event_id:eventId,p_letter_id:next.letterId});
   if(error)throw error;if(data.conflict)continue;
   const result=data as LetterResult;

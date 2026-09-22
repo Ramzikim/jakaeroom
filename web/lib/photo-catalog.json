@@ -2,13 +2,13 @@
   {
     "id": "food_01",
     "category": "food",
-    "assetPath": "/library/photo_framed/food/KakaoTalk_20260914_200816595_03.webp",
+    "assetPath": "/library/photo_framed/food/KakaoTalk_20260914_200816595_03-upright.webp",
     "available": true
   },
   {
     "id": "food_02",
     "category": "food",
-    "assetPath": "/library/photo_framed/food/KakaoTalk_20260914_200816595_04.webp",
+    "assetPath": "/library/photo_framed/food/KakaoTalk_20260914_200816595_04-upright.webp",
     "available": true
   },
   {
@@ -32,19 +32,19 @@
   {
     "id": "outfit_02",
     "category": "outfit",
-    "assetPath": "/library/photo_framed/outfit/photo_outfit_02.webp",
+    "assetPath": "/library/photo_framed/outfit/photo_outfit_02-upright.webp",
     "available": true
   },
   {
     "id": "outfit_03",
     "category": "outfit",
-    "assetPath": "/library/photo_framed/outfit/photo_outfit_03.webp",
+    "assetPath": "/library/photo_framed/outfit/photo_outfit_03-upright.webp",
     "available": true
   },
   {
     "id": "outfit_04",
     "category": "outfit",
-    "assetPath": "/library/photo_framed/outfit/photo_outfit_04.webp",
+    "assetPath": "/library/photo_framed/outfit/photo_outfit_04-upright.webp",
     "available": true
   },
   {
@@ -56,7 +56,7 @@
   {
     "id": "outfit_06",
     "category": "outfit",
-    "assetPath": "/library/photo_framed/outfit/photo_outfit_06.webp",
+    "assetPath": "/library/photo_framed/outfit/photo_outfit_06-upright.webp",
     "available": true
   },
   {
@@ -74,25 +74,25 @@
   {
     "id": "window_02",
     "category": "window",
-    "assetPath": "/library/photo_framed/window/photo_window_02.webp",
+    "assetPath": "/library/photo_framed/window/photo_window_02-upright.webp",
     "available": true
   },
   {
     "id": "window_03",
     "category": "window",
-    "assetPath": "/library/photo_framed/window/photo_window_03.webp",
+    "assetPath": "/library/photo_framed/window/photo_window_03-upright.webp",
     "available": true
   },
   {
     "id": "window_04",
     "category": "window",
-    "assetPath": "/library/photo_framed/window/photo_window_04.webp",
+    "assetPath": "/library/photo_framed/window/photo_window_04-upright.webp",
     "available": true
   },
   {
     "id": "window_05",
     "category": "window",
-    "assetPath": "/library/photo_framed/window/photo_window_05.webp",
+    "assetPath": "/library/photo_framed/window/photo_window_05-upright.webp",
     "available": true
   },
   {
@@ -110,19 +110,19 @@
   {
     "id": "happy_02",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_02.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_02-upright.webp",
     "available": true
   },
   {
     "id": "happy_03",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_03.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_03-upright.webp",
     "available": true
   },
   {
     "id": "happy_04",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_04.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_04-upright.webp",
     "available": true
   },
   {
@@ -134,7 +134,7 @@
   {
     "id": "happy_06",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_06.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_06-upright.webp",
     "available": true
   },
   {
@@ -146,19 +146,19 @@
   {
     "id": "happy_08",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_08.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_08-upright.webp",
     "available": true
   },
   {
     "id": "happy_09",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_09.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_09-upright.webp",
     "available": true
   },
   {
     "id": "happy_10",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_10.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_10-upright.webp",
     "available": true
   },
   {
@@ -170,7 +170,7 @@
   {
     "id": "happy_12",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_12.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_12-upright.webp",
     "available": true
   },
   {
@@ -194,13 +194,13 @@
   {
     "id": "happy_16",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_16.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_16-upright.webp",
     "available": true
   },
   {
     "id": "happy_17",
     "category": "happy",
-    "assetPath": "/library/photo_framed/happy/photo_happy_17.webp",
+    "assetPath": "/library/photo_framed/happy/photo_happy_17-upright.webp",
     "available": true
   },
   {
@@ -230,7 +230,7 @@
   {
     "id": "hug_01",
     "category": "hug",
-    "assetPath": "/library/photo_framed/hug/photo_hug_01.webp",
+    "assetPath": "/library/photo_framed/hug/photo_hug_01-upright.webp",
     "available": true
   },
   {
@@ -242,7 +242,7 @@
   {
     "id": "hug_03",
     "category": "hug",
-    "assetPath": "/library/photo_framed/hug/photo_hug_03.webp",
+    "assetPath": "/library/photo_framed/hug/photo_hug_03-upright.webp",
     "available": true
   },
   {
@@ -254,7 +254,7 @@
   {
     "id": "hug_05",
     "category": "hug",
-    "assetPath": "/library/photo_framed/hug/photo_hug_05.webp",
+    "assetPath": "/library/photo_framed/hug/photo_hug_05-upright.webp",
     "available": true
   }
 ]

@@ -1,4 +1,5 @@
 'use client';
+import {requestJson,withTimeout} from './request-json';
 import {authClient} from './auth-client';
 import type {ProgressionResult} from '../lib/progression';
 export type CoinOrigin={x:number;y:number};
@@ -22,10 +23,9 @@ export function requestCoins(input:{kind:Exclude<CoinRewardKind,'photo'|'special
  const identity=client?.auth.getSession();
  const eventId=input.eventId??crypto.randomUUID();
  return queueCoinOperation(async()=>{
-  const session=(await identity)?.data.session;if(!session)return;
-  const current=(await client!.auth.getSession()).data.session;if(current?.user.id!==session.user.id)return;
-  const response=await fetch('/api/progression',{method:'POST',headers:{Authorization:`Bearer ${current.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({...input,eventId})});
-  if(!response.ok)throw Error('Reward unavailable');
-  publishCoins({userId:session.user.id,result:await response.json(),kind:input.kind,origin});
+  const session=(await withTimeout(identity))?.data.session;if(!session)return;
+  const current=(await withTimeout(client!.auth.getSession())).data.session;if(current?.user.id!==session.user.id)return;
+  const result=await requestJson<ProgressionResult>('/api/progression',{method:'POST',headers:{Authorization:`Bearer ${current.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({...input,eventId})});
+  publishCoins({userId:session.user.id,result,kind:input.kind,origin});
  });
 }

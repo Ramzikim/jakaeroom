@@ -1,4 +1,5 @@
 'use client';
+import {requestJson,withTimeout} from './request-json';
 import {useState} from 'react';
 import {authClient} from './auth-client';
 import {queueCoinOperation} from './coin-events';
@@ -9,8 +10,8 @@ export function DevResets({authorized=false}:{authorized?:boolean}){
   setBusy(true);setError('');
   await queueCoinOperation(async()=>{
    try{
-    const session=(await authClient()?.auth.getSession())?.data.session;
-    if(session){const response=await fetch('/api/progression/dev-reset',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({scope})});if(!response.ok)throw Error();}
+    const session=(await withTimeout(authClient()?.auth.getSession()))?.data.session;
+    if(session){await requestJson('/api/progression/dev-reset',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({scope})});}
     if(scope!=='coins'){localStorage.removeItem('jakae-guest-letters');localStorage.removeItem('jakae-letter-counts');}
     location.reload();
    }catch{setError('초기화 실패. 다시 시도해 주세요.');setBusy(false);}
