@@ -1,5 +1,6 @@
 'use client';
 import {setRoomCursor} from './room-cursor';
+import {usePreloadCollectionImages} from './preload-collection-images';
 import {Component, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {Html, OrbitControls, SoftShadows, useGLTF} from '@react-three/drei';
@@ -117,6 +118,7 @@ function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
 function Room(){
  const admin=useAdminTools();
  const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
+ usePreloadCollectionImages(ready);
  const dialogue=useProfileDialogue();
  const letterPending=useRef(false);
  const [letterLoading,setLetterLoading]=useState(false);
