@@ -19,11 +19,13 @@ export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Lif
  }),[textures]);
  const [news,setNews]=useState(''),[monitor,setMonitor]=useState<number|null>(null),element=useRef<HTMLDivElement>(null);
  const tvGlow=useRef<T.Group>(null);
- useFrame(()=>{if(tvGlow.current)tvGlow.current.visible=life.current.media==='tv';});
+ const tvLight=useRef<T.PointLight>(null);
+ // Keep the light count stable: toggling visibility recompiles lit room materials.
+ useFrame(()=>{const on=life.current.media==='tv';if(tvGlow.current)tvGlow.current.visible=on;if(tvLight.current)tvLight.current.intensity=on?1.2:0;});
  useFrame(()=>{const s=life.current;const id=s.media==='tv'?s.mediaGiftId:null;if(id!==shoppingId)setShoppingId(id);const next=s.media==='tv'?s.mediaNews.slice(0,Math.max(1,Math.floor((s.now-s.mediaStarted)/TV_CHAR_SECONDS))):'';if(next!==news)setNews(next);const screen=s.media==='game'?s.monitor:null;if(screen!==monitor)setMonitor(screen);});
  return <>
+  <pointLight ref={tvLight} position={[-.6,1.12,3.22]} color="#92c9ff" intensity={0} distance={2.4} decay={2}/>
   <group ref={tvGlow} visible={false}>
-   <pointLight position={[-.6,1.12,3.22]} color="#92c9ff" intensity={1.2} distance={2.4} decay={2}/>
    <mesh position={[-.6,.044,1.9]} rotation={[-Math.PI/2,0,0]} raycast={()=>{}}>
     <planeGeometry args={[1.65,1.7]}/>
     <shaderMaterial transparent depthWrite={false} toneMapped={false}
