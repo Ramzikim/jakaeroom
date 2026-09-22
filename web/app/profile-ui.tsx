@@ -73,7 +73,7 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
   <button ref={edit} onClick={open}>{profile?`${profile.nickname} · ${profile.vocative}`:'이름 정하기'}</button>
   {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>로그인</button>}
   </div>
-  {!session&&<small className="guest-progress-note">로그인하면 하트코인을 모으고,<br/>도감 진행상황을 저장할 수 있어요.</small>}
+  {!session&&<small className="guest-progress-note">로그인을 해야 하트코인 획득,<br/>사진이나 편지 수집이 가능해요!</small>}
 
   {!dialog.current?.open&&error&&<span className="profile-error" role="alert">{error}</span>}
  </aside>
