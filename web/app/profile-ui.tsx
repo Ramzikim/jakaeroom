@@ -2,6 +2,7 @@
 import {createContext,useContext,useEffect,useRef,useState} from 'react';
 import type {Session} from '@supabase/supabase-js';
 import {authClient} from './auth-client';
+import {HeartCoinHud} from './heart-coin-hud';
 import {interpolateDialogue,kstYear,makeProfile,parseProfile,type Profile} from './profile';
 const Context=createContext<Profile|null>(null),guestKey='jakae-guest-profile-v1';
 export const useJakaeProfile=()=>useContext(Context);
@@ -67,19 +68,23 @@ export function ProfileProvider({children}:{children:React.ReactNode}){
   }catch(e){setError(e instanceof Error?e.message:'저장하지 못했어요. 다시 시도해 주세요.');}finally{setSaving(false);}
  }
  return <Context.Provider value={profile}>{children}<aside className="profile-control" aria-label="내 프로필">
+  <HeartCoinHud session={session} ready={ready}/>
+  <div className="profile-buttons">
   <button ref={edit} onClick={open}>{profile?`${profile.nickname} · ${profile.vocative}`:'이름 정하기'}</button>
-  {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>로그인하고 저장하기</button>}
+  {session?<button onClick={logout}>로그아웃</button>:<button onClick={login}>로그인</button>}
+  </div>
+  {!session&&<small className="guest-progress-note">로그인하면 하트코인을 모으고,<br/>도감 진행상황을 저장할 수 있어요.</small>}
 
   {!dialog.current?.open&&error&&<span className="profile-error" role="alert">{error}</span>}
  </aside>
- <dialog ref={dialog} className="profile-dialog" onCancel={close} onClose={()=>edit.current?.focus()}>
+ <dialog ref={dialog} className="profile-dialog" onClick={e=>{if(e.target===dialog.current)close();}} onCancel={close} onClose={()=>edit.current?.focus()}>
   <form key={profile?.updatedAt||'new'} ref={form} onSubmit={save}>
    <h2>작애가 뭐라고 부를지 정해줘!</h2><p>로그인 없이도 놀 수 있어. 로그인하면 이름을 계정에 저장해!</p>
    <label>이름 / 별명<input name="nickname" autoComplete="nickname" placeholder="작애에게 불리고 싶은 이름을 적어줘" maxLength={20} required defaultValue={profile?.nickname||''}/></label>
    <fieldset><legend>성별 <small>작애가 부를 호칭에만 사용해요.</small></legend><label><input type="radio" name="gender" value="female" required defaultChecked={profile?.gender==='female'}/>여성</label><label><input type="radio" name="gender" value="male" required defaultChecked={profile?.gender==='male'}/>남성</label></fieldset>
    <label>태어난 연도<input name="birthYear" inputMode="numeric" type="number" min={kstYear()-120} max={kstYear()} step={1} required defaultValue={profile?.birthYear??2000}/></label>
    {error&&<p role="alert" className="profile-error">{error}</p>}
-   <div className="profile-actions"><button type="button" onClick={close}>나중에 할게</button><button type="submit" disabled={saving}>{saving?'저장 중…':'이렇게 불러줘'}</button></div>
+   <div className="profile-actions"><button type="button" onClick={close}>닫기</button><button type="submit" disabled={saving}>{saving?'저장 중…':'이렇게 불러줘'}</button></div>
   </form>
  </dialog></Context.Provider>;
 }

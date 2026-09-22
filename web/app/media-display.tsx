@@ -3,9 +3,14 @@ import {useMemo,useRef,useState,type RefObject} from 'react';
 import {useFrame} from '@react-three/fiber';
 import {Html,useTexture} from '@react-three/drei';
 import * as T from 'three';
+import {useGifts,GiftPrice} from './gift-ui';
+import {getGiftById} from '../lib/gifts';
+import {kst} from './life';
 import {TV_CHAR_SECONDS,type Life} from './behavior';
 
 export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Life>,bubble:RefObject<HTMLDivElement|null>,character:RefObject<T.Sprite|null>,carrier:RefObject<T.Group|null>}){
+ const gifts=useGifts(),[shoppingId,setShoppingId]=useState<string|null>(null);
+ const shopping=shoppingId?getGiftById(shoppingId):undefined;
  const textures=useTexture(['/jakae_sprite/monitor_01.png','/jakae_sprite/monitor_02.png','/jakae_sprite/monitor_03.png']);
  const maps=useMemo(()=>textures.map(original=>{
   const t=original.clone();t.colorSpace=T.SRGBColorSpace;
@@ -15,7 +20,7 @@ export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Lif
  const [news,setNews]=useState(''),[monitor,setMonitor]=useState<number|null>(null),element=useRef<HTMLDivElement>(null);
  const tvGlow=useRef<T.Group>(null);
  useFrame(()=>{if(tvGlow.current)tvGlow.current.visible=life.current.media==='tv';});
- useFrame(()=>{const s=life.current;const next=s.media==='tv'?s.mediaNews.slice(0,Math.max(1,Math.floor((s.now-s.mediaStarted)/TV_CHAR_SECONDS))):'';if(next!==news)setNews(next);const screen=s.media==='game'?s.monitor:null;if(screen!==monitor)setMonitor(screen);});
+ useFrame(()=>{const s=life.current;const id=s.media==='tv'?s.mediaGiftId:null;if(id!==shoppingId)setShoppingId(id);const next=s.media==='tv'?s.mediaNews.slice(0,Math.max(1,Math.floor((s.now-s.mediaStarted)/TV_CHAR_SECONDS))):'';if(next!==news)setNews(next);const screen=s.media==='game'?s.monitor:null;if(screen!==monitor)setMonitor(screen);});
  return <>
   <group ref={tvGlow} visible={false}>
    <pointLight position={[-.6,1.12,3.22]} color="#92c9ff" intensity={1.2} distance={2.4} decay={2}/>
@@ -40,6 +45,6 @@ export function MediaDisplay({life,bubble,character,carrier}:{life:RefObject<Lif
    const candidates=[[x,y],[8,y],[size.width-w-8,y],[x,8],[x,size.height-h-8],...blockers.flatMap(b=>[[b.left-w-8,y],[b.right+8,y],[x,b.top-h-8],[x,b.bottom+8]])];
    const found=candidates.map(([a,b])=>[clamp(a,size.width-w),clamp(b,size.height-h)]).find(([a,b])=>blockers.every(r=>a+w+5<=r.left||a>=r.right+5||b+h+5<=r.top||b>=r.bottom+5));
    el.style.visibility=found?'visible':'hidden';return found||[x,y];
-  }}><div ref={element} className="tv-news"><strong>{life.current.mediaTitle}</strong><div>{news}</div></div></Html>}
+  }}><div ref={element} className="tv-news"><strong>{life.current.mediaTitle}</strong><div>{news}</div>{shopping&&!gifts.owned.includes(shopping.id)&&<button className="tv-shop-buy" onClick={e=>{e.stopPropagation();gifts.offer(shopping,shopping.band??kst().period);}}><GiftPrice price={shopping.price}/>구매하기</button>}</div></Html>}
  </>;
 }

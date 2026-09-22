@@ -1,0 +1,45 @@
+-- Disposable fixtures; all writes roll back. Never uses a real user's balance.
+begin;
+do $$
+declare u uuid:=gen_random_uuid(); v uuid:=gen_random_uuid(); e uuid:=gen_random_uuid(); r jsonb; c jsonb;
+begin
+ insert into auth.users(id) values(u),(v);
+ insert into public.profiles("userId",nickname,gender,"birthYear",vocative) values(v,'쭈인','female',1991,'쭈인이');
+ c:='[{"id":"food_01","category":"food"},{"id":"food_02","category":"food"},{"id":"hug_01","category":"hug"},{"id":"window_01","category":"window"},{"id":"window_02","category":"window"}]';
+ r:=public.acquire_photo_album(u,'food',e,c,'{"food":1}');
+ assert (r->>'delta')::int=30,'new photo +30';
+ r:=public.acquire_photo_album(u,'food',e,c,'{"food":1}');
+ assert r->>'photoId' is null,'event dedupe';
+ update public.user_progression set reward_receipts='{}' where user_id=u;
+ r:=public.acquire_photo_album(u,'food',gen_random_uuid(),c,'{"food":1}');
+ assert r->>'photoId' is null,'food max 1/day';
+ update public.user_progression set reward_receipts='{}' where user_id=u;
+ r:=public.acquire_photo_album(u,'window',gen_random_uuid(),c,'{"window":1}');
+ assert (r->>'delta')::int=30,'window award';
+ update public.user_progression set reward_receipts='{}' where user_id=u;
+ r:=public.acquire_photo_album(u,'window',gen_random_uuid(),c,'{"window":1}');
+ assert r->>'photoId' is null,'window max 1/band';
+ r:=public.acquire_photo_album(u,'pet',gen_random_uuid(),c,'{"hug":1}');
+ assert r->>'photoId' is null,'non VIP excluded';
+ r:=public.acquire_photo_album(v,'pet',gen_random_uuid(),c,'{"hug":1}');
+ assert r->>'photoId' is null,'letter 22 prerequisite';
+ update public.user_progression set collected_letter_ids=array['letter_22'],daily_photo_total=10 where user_id=v;
+ r:=public.acquire_photo_album(v,'pet',gen_random_uuid(),c,'{"hug":0}');
+ assert r->>'photoId' is null,'failed roll';
+ r:=public.acquire_photo_album(v,'pet',gen_random_uuid(),c,'{"hug":1}');
+ assert r->>'photoId'='hug_01' and (r->>'delta')::int=30,'retry/new hug outside standard cap';
+ assert (select daily_photo_total=10 from public.user_progression where user_id=v),'hug excluded from standard counter';
+ r:=public.acquire_photo_album(v,'pet',gen_random_uuid(),c,'{"hug":1}');
+ assert r->>'photoId' is null,'hug once/day';
+ update public.user_progression set progression_date=progression_date-1 where user_id=v;
+ r:=public.acquire_photo_album(v,'pet',gen_random_uuid(),c,'{"hug":1}');
+ assert r->>'photoId'='hug_01' and (r->>'delta')::int=0,'duplicate hug discovery +0';
+ assert (select heart_coin_balance=30 and cardinality(collected_photo_ids)=1 and daily_photo_total=0 and daily_photo_category_counts->>'hug'='1' from public.user_progression where user_id=v),'KST reset / unique storage';
+ assert (public.mutate_progression(v,'ensure')->'progression'->>'heart_coin_balance')::int=30,'reload balance';
+ r:=public.acquire_photo_album(u,'sleep',gen_random_uuid(),c,'{"happy":1,"hug":1}');
+ assert r->>'photoId' is null,'sleep excluded';
+ assert not has_function_privilege('authenticated','public.acquire_photo_album(uuid,text,uuid,jsonb,jsonb)','EXECUTE'),'server-only RPC';
+ assert not has_function_privilege('anon','public.acquire_photo_album(uuid,text,uuid,jsonb,jsonb)','EXECUTE'),'guest cannot write';
+end $$;
+rollback;
+select 'PASS: photo rewards, dedupe, caps, VIP/letter gating, hug duplicates, KST reset, persistence, server-only access' as validation;

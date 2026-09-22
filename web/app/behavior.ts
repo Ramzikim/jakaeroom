@@ -15,7 +15,7 @@ export const dreamLines=['딸기 케이크 먹는 꿈 꾸는 중이야아...','�
 export const refusalLines=['잠깐만 쉬었다가 해애.','작애 털 다 눌리겠어어.','그만그마안~ 작애 납작해져어.','조금 있다가 또 해죠오.','작애 지금 너무 많이 쓰담받았어어.','헤헤, 이제 작애 차례 끝이야아.','손 잠깐 쉬자아. 작애도 쉬고 싶어어.','더 하면 작애 털 모양 이상해질 거야아.','작애 좋아하는 거 알겠으니까 잠깐만 쉬자아.','으으, 간지러워어. 이제 잠깐 스토옵!','또오? 작애 인기 너무 많은데에.','작애도 숨 좀 돌리자아.'];
 const wetLines=['젖은 솜이 됐어어...','몸이 무겁다아!','어서 말랐으면 좋겠어어.'];
 export function walkSequence(dx:number,dz:number):Sequence{const right=16*dx-12*dz,toward=12*dx+16*dz;return `${toward<0?'backwalk':'walk'}_${right<0?'left':'right'}`;}
-export function createLife(){return {media:null as null|'tv'|'game',mediaStarted:0,mediaTitle:'',mediaNews:'',mediaReaction:'',mediaReacted:false,monitor:0,gameDate:'',gamePlayCount:{day:0,afternoon:0,night:0,dawn:0},relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
+export function createLife(){return {media:null as null|'tv'|'game',mediaStarted:0,mediaGiftId:null as string|null,mediaExtra:0,mediaTitle:'',mediaNews:'',mediaReaction:'',mediaReacted:false,monitor:0,gameDate:'',gamePlayCount:{day:0,afternoon:0,night:0,dawn:0},relationshipTier:'normal' as Tier,postBathPending:false,basketBerry:false,cushionRequested:false,sequence:'idle' as Sequence,started:0,now:0,wait:5,node:'center',destination:'center',path:[] as Point[],point:[1.65,0,-.55],pending:null as null|'sit'|'sleep',seat:'bed' as 'bed'|'rug',speech:'왔어어? 내 방에서 같이 놀자!',speechUntil:7,nextSpeech:0,pets:[] as number[],awakeUntil:0,wetUntil:0};}
 export function animationFps(s:ReturnType<typeof createLife>){return s.sequence==='sit_idle'||s.sequence==='sit_sleeploop'?6:s.sequence.includes('walk')&&s.now<s.wetUntil?RULES.fps*.65:RULES.fps;}
 export type Life=ReturnType<typeof createLife>;
 export const locked=(s:Life)=>['hop','shy','bath','strawberry','sit_snooze','sit_sleeploop'].includes(s.sequence)||s.pending==='sleep';
@@ -26,7 +26,7 @@ function place(s:Life,key:keyof typeof positions,node:string){s.point=[...positi
 function ground(s:Life){if(s.node==='cushion'){s.point=[...positions.rug];s.point[1]=0;return;}if(s.point[1]>.1){place(s,'bedRight','bed');}else s.point[1]=0;}
 function idle(s:Life,rng:()=>number){change(s,'idle');s.wait=5+rng()*7;}
 function endMedia(s:Life,rng:()=>number){
- const tv=s.media==='tv';s.media=null;s.mediaNews='';s.speech='';s.path=[];s.pending=null;s.cushionRequested=false;
+ const tv=s.media==='tv';s.media=null;s.mediaGiftId=null;s.mediaExtra=0;s.mediaNews='';s.speech='';s.path=[];s.pending=null;s.cushionRequested=false;
  if(tv){s.point=[...positions.rug];s.point[1]=0;s.node='cushion';idle(s,rng);go(s,'rug');}
  else{s.point=[anchors.desk[0],0,anchors.desk[1]];s.node='desk';s.destination='desk';idle(s,rng);}
 }
@@ -45,7 +45,7 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
    if(s.gamePlayCount[band]>=3){ground(s);s.path=[];s.pending=null;idle(s,rng);say(s,pick(GAME_LIMIT_DIALOGUE,rng));return true;}
    s.gamePlayCount[band]++;s.monitor=Math.floor(rng()*3);
   }
-  s.path=[];s.pending=null;s.cushionRequested=false;s.basketBerry=false;s.media=action;s.mediaStarted=s.now;s.mediaReacted=false;
+  s.path=[];s.pending=null;s.cushionRequested=false;s.basketBerry=false;s.media=action;s.mediaGiftId=null;s.mediaExtra=0;s.mediaStarted=s.now;s.mediaReacted=false;
   if(action==='tv'){
    place(s,'rug','cushion');change(s,'sit_idle');s.speech='';const report=TV_CONTENT[band][Math.floor(rng()*TV_CONTENT[band].length)];s.mediaTitle=report.title;s.mediaNews=report.script;s.mediaReaction=report.reaction;
   }else{
@@ -92,7 +92,7 @@ export function tickLife(s:Life,dt:number,band:Band,lengths:Record<Sequence,numb
   const elapsed=s.now-s.mediaStarted;
   if(s.media==='tv'&&elapsed>=tvReactionTime(s.mediaNews)&&!s.mediaReacted){s.mediaReacted=true;say(s,s.mediaReaction);}
   // Keep the existing reaction display duration, including for long broadcasts.
-  if(s.media==='tv'?elapsed>=10&&s.mediaReacted&&s.now>=s.speechUntil:elapsed>=8)endMedia(s,rng);
+  if(s.media==='tv'?elapsed>=10+s.mediaExtra&&s.mediaReacted&&s.now>=s.speechUntil+s.mediaExtra:elapsed>=8)endMedia(s,rng);
   return;
  }
  if(s.postBathPending&&s.now>=s.speechUntil&&s.now>=s.wetUntil&&!locked(s)){say(s,pick(postBathLines,rng));s.postBathPending=false;}

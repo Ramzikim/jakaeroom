@@ -1,0 +1,4 @@
+export const HEART_COIN={minimumUnit:5,dailyLogin:30,passiveReward:10,passiveIntervalMs:300_000,passiveDailyCap:120,interaction:5,newPhoto:30,newRegularLetter:20,newSpecialLetter:20} as const;
+export type Progression={user_id:string;heart_coin_balance:number;last_passive_reward_at:string;daily_passive_earned:number;collected_photo_ids:string[];collected_letter_ids:string[];owned_gift_ids:string[];purchased_gift_ids:string[];daily_photo_total:number;daily_photo_category_counts:Record<string,number>;daily_interaction_reward_counts:Record<string,number>;progression_date:string;letter_state?:import('./letter-rules').LetterState};
+export type RewardReason={kind:'daily_login'|'passive'}|{kind:'interaction';eventId:string;category?:string};
+export type ProgressionResult={ok:true;newlyCollected:boolean;delta:number;progression:Progression}|{ok:false;error:'insufficient_funds';newlyCollected:false;delta:0;progression:Progression};

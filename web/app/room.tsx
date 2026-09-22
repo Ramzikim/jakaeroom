@@ -1,8 +1,5 @@
 'use client';
-import {HelpModal} from './help-modal';
-import {Bgm} from './bgm';
 import {setRoomCursor} from './room-cursor';
-import {AdminPanel,useAdminTools} from './admin-tools';
 import {Component, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {Html, OrbitControls, SoftShadows, useGLTF} from '@react-three/drei';
@@ -10,10 +7,22 @@ import * as T from 'three';
 import type {OrbitControls as OrbitControlsType} from 'three-stdlib';
 import {kstDate,readCounts,type Action,type LetterCounts} from './behavior';
 import {useProfileDialogue} from './profile-ui';
-import {selectLetter} from './letters';
+import {getLetter} from './letters';
+import {requestLetterEvent} from './letter-events';
+import {recordPhotoAction} from './photo-acquisition';
+import {photoPropMessage} from '../lib/photos';
+import {PropMessage,showPropMessage} from './prop-message';
+import {AdminPanel,useAdminTools} from './admin-tools';
+import {HelpModal} from './help-modal';
+import {Bgm} from './bgm';
+import {authClient} from './auth-client';
+import {CollectionModal} from './collection-modal';
 import {playSfx,setSfxEnabled} from './sfx';
 
+import {GiftProvider,useGifts} from './gift-ui';
+import {CabinetGifts} from './cabinet-gifts';
 import {TableProps} from './table-props';
+import {PlayMenu} from './play-menu';
 import {AccentLamps} from './accent-lamps';
 import {WindowSky} from './window-sky';
 import {SpriteResident} from './sprite-resident';
@@ -30,10 +39,21 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
 }
 function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
-function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,onBed,disabled}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,onBed:()=>void,disabled:boolean}){
- const {scene}=useGLTF('/models/room-web.glb');
+function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,onBed,disabled,sleeping}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,onBed:()=>void,disabled:boolean,sleeping:boolean}){
+ const gifts=useGifts();
+ const {scene}=useGLTF('/models/room-web.glb?v=bare-left-wall-v001');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
+ const wardrobePending=useRef(false);
+ async function clickPhotoProp(action:'wardrobe'|'drawer',origin:{x:number;y:number}){
+  if(wardrobePending.current||document.querySelector('dialog[open]'))return;
+  wardrobePending.current=true;playSfx('ui');
+  try{
+   await requestLetterEvent(action==='drawer'?'drawer':'interrupt');
+   const result=sleeping?undefined:await recordPhotoAction(action,origin);
+   if(!result?.photoId)showPropMessage(result?.error?'사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.':photoPropMessage(action,result?.progression?.collected_photo_ids??[]));
+  }catch{showPropMessage('잠시 후 다시 눌러 주세요.');}finally{wardrobePending.current=false;}
+ }
  const ripple=useRef<T.Mesh<T.RingGeometry,T.MeshBasicMaterial>>(null),rippleAge=useRef(1);
  useFrame((_,delta)=>{
   if(!ripple.current||rippleAge.current>=.65)return;
@@ -44,14 +64,16 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
   ripple.current.visible=progress<1;
  });
  return <group>
-  <primitive object={room} onClick={(e:import("@react-three/fiber").ThreeEvent<MouseEvent>)=>{if(!disabled&&e.button===0&&e.point.y<.08){e.stopPropagation();if(ripple.current){ripple.current.position.set(e.point.x,e.point.y+.012,e.point.z);ripple.current.scale.setScalar(.084);ripple.current.material.opacity=.8;ripple.current.visible=true;rippleAge.current=0;}onFloor([e.point.x,e.point.z]);}}}/><TableProps onBasket={onBasket} disabled={disabled}/>
+  {!disabled&&<mesh name="WardrobePhotoHotspot" position={[-3.49,1.27,-2.756]} onClick={e=>{e.stopPropagation();if(e.button===0)void clickPhotoProp('wardrobe',{x:e.clientX,y:e.clientY});}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[.04,2.54,2.28]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
+  <mesh name="RecordPlayerDrawerHotspot" position={[2.15,.48,3.94]} onClick={e=>{e.stopPropagation();if(e.button===0)void clickPhotoProp('drawer',{x:e.clientX,y:e.clientY});}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[.65,.57,.06]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
+  <primitive object={room} onClick={(e:import("@react-three/fiber").ThreeEvent<MouseEvent>)=>{void requestLetterEvent('interrupt');if(!disabled&&e.button===0&&e.point.y<.08){e.stopPropagation();if(ripple.current){ripple.current.position.set(e.point.x,e.point.y+.012,e.point.z);ripple.current.scale.setScalar(.084);ripple.current.material.opacity=.8;ripple.current.visible=true;rippleAge.current=0;}onFloor([e.point.x,e.point.z]);}}}/><TableProps onBasket={onBasket} disabled={disabled}/>
   <mesh ref={ripple} visible={false} rotation={[-Math.PI/2,0,0]} raycast={()=>{}}>
    <ringGeometry args={[.87,1,48]}/><meshBasicMaterial color="#fff2da" transparent opacity={0} depthWrite={false} toneMapped={false}/>
   </mesh>
   {!disabled&&<mesh position={[-3.5,.7,2.8]} onClick={e=>{e.stopPropagation();onBath();}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('bath');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[1.65,.1,1.9]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   {!disabled&&<mesh position={[0,.245,.45]} onClick={e=>{e.stopPropagation();onCushion();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><cylinderGeometry args={[.58,.58,.08,24]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   {!disabled&&<mesh name="BedSleepHotspot" position={[.2,.64,-2.69]} onClick={e=>{e.stopPropagation();playSfx('ui');onBed();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[2.14,.85,2.44]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
-  <WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
+  <mesh name="GiftCabinetCursorHotspot" onClick={e=>{e.stopPropagation();if(!document.querySelector('dialog[open]'))gifts.openCabinet();}} position={[-3.62,.95,-.75]} onPointerOver={e=>{e.stopPropagation();setRoomCursor('gift');}} onPointerOut={()=>setRoomCursor('normal')}><boxGeometry args={[.46,1.9,1.6]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><CabinetGifts ownedGiftIds={gifts.owned} previewAll={false}/><WindowSky phase={phase}/><mesh position={[.1,2.16,-3.90]} onClick={e=>{e.stopPropagation();onWindow();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><planeGeometry args={[3.48,1.30]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
   <mesh position={[-.6,1.11,3.55]} onClick={e=>{e.stopPropagation();playSfx('ui');onTv();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[1.32,.77,.115]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><mesh position={[3.28,1.36,-3.64]} onClick={e=>{e.stopPropagation();playSfx('ui');onGame();}} onPointerOver={()=>{setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><planeGeometry args={[1.02,.62]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh><AccentLamps power={a.lamp}/>
   <pointLight position={[-1.48,1.22,-3.47]} color="#ffc487" intensity={a.lamp} distance={4} decay={2}/>
   <pointLight position={[2.28,1.45,-3.48]} color="#ffe0b1" intensity={a.lamp*.8} distance={4}/>
@@ -91,55 +113,74 @@ function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
  return <OrbitControls ref={controls} target={[0,.75,0]} enablePan screenSpacePanning enableRotate={false} enableDamping zoomSpeed={.6} mouseButtons={{MIDDLE:T.MOUSE.DOLLY}} touches={{ONE:T.TOUCH.ROTATE,TWO:T.TOUCH.DOLLY_PAN}}/>;
 }
 
-export default function Room(){
+function Room(){
  const admin=useAdminTools();
  const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
  const dialogue=useProfileDialogue();
+ const letterPending=useRef(false);
+ const [collectionOpen,setCollectionOpen]=useState(false);
+ const letterReturnFocus=useRef<HTMLElement|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),letterButton=useRef<HTMLButtonElement>(null),positionRef=useRef(new T.Vector3(1.65,.7,-.55));
  const phase=admin.isAdmin?(admin.band||now.period):(override||now.period),a=atmospheres[phase];
  const [counts,setCounts]=useState<LetterCounts>(()=>readCounts(null));
  const countRef=useRef(counts);
  const busy=['pet','berry','bath','rest','sleep'].includes(mood);
- const limited=counts.date===kstDate()&&counts[now.period]>=2;
+ const limited=counts.date===kstDate()&&counts[admin.isAdmin?phase:now.period]>=2;
  const storeCounts=(next:LetterCounts)=>{countRef.current=next;setCounts(next);try{localStorage.setItem('jakae-letter-counts',JSON.stringify(next));}catch{}};
- useEffect(()=>{try{const next=readCounts(localStorage.getItem('jakae-letter-counts'));countRef.current=next;setCounts(next);}catch{}},[]);
+ useEffect(()=>{
+  let active=true;
+  const sync=()=>{void requestLetterEvent('load').then(result=>{if(active&&result){const next={...readCounts(null),...result.state.counts,date:result.state.date};countRef.current=next;setCounts(next);}});};
+  sync();const subscription=authClient()?.auth.onAuthStateChange(()=>{setTimeout(sync,0);});
+  return()=>{active=false;subscription?.data.subscription.unsubscribe();};
+ },[]);
  useEffect(()=>{if(countRef.current.date!==kstDate())storeCounts(readCounts(null));},[now]);
  useEffect(()=>{const timer=setInterval(()=>setNow(kst()),15000);return()=>clearInterval(timer);},[]);
  useEffect(()=>{setSfxEnabled(false);},[]);
- const act=(action:Action)=>setCommand({action,id:Date.now()+Math.random()});
- const openLetter=()=>{
-  if(dialog.current?.open)return false;
-  const date=kstDate(),band=kst().period;let current=readCounts(JSON.stringify(countRef.current),date);
-  try{current=readCounts(localStorage.getItem('jakae-letter-counts'),date);}catch{}
-  if(current[band]>=2){storeCounts(current);return false;}
-  storeCounts({...current,[band]:current[band]+1});setLetter(previous=>selectLetter(band,previous.id));dialog.current?.showModal();playSfx('paper');return true;
+ useEffect(()=>{
+  const interrupt=(event:MouseEvent)=>{if(event.target instanceof Element&&event.target.closest('[data-collection-ui]'))return;if(!(event.target instanceof HTMLCanvasElement))void requestLetterEvent('interrupt');};
+  document.addEventListener('click',interrupt,true);return()=>document.removeEventListener('click',interrupt,true);
+ },[]);
+ const act=(action:Action)=>{if(!document.querySelector('dialog[open]'))setCommand({action,id:Date.now()+Math.random()});};
+ const openLetter=async(rereadId?:string)=>{
+  if(dialog.current?.open||letterPending.current||(!rereadId&&document.querySelector('dialog[open]')))return false;
+  letterReturnFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
+  letterPending.current=true;
+  try{
+   const rect=letterButton.current?.getBoundingClientRect();
+   const result=await requestLetterEvent(rereadId?'reread':'regular',rereadId,rect?{x:rect.left+rect.width/2,y:rect.top}:undefined);
+   if(!result)return false;
+   storeCounts({...readCounts(null),...result.state.counts,date:result.state.date});
+   const next=result.letterId?getLetter(result.letterId):null;if(!next)return false;
+   setLetter(next);dialog.current?.showModal();playSfx('paper');return true;
+  }finally{letterPending.current=false;}
  };
  // Feature-detected agent access uses the same visible controls and local data.
  useEffect(()=>{
   const doc=document as Document & {modelContext?:{registerTool:(tool:unknown,options:unknown)=>void}};
   if(!doc.modelContext?.registerTool||!ready)return;const abort=new AbortController();
-  try{doc.modelContext.registerTool({name:'play_with_jakae',description:'Pet or wake Jakae, sleep, eat a strawberry, or receive a limited letter.',inputSchema:{type:'object',properties:{action:{type:'string',enum:['pet','bed','berry','letter']}},required:['action'],additionalProperties:false},execute:(input:unknown)=>{const value=input as {action?:string};if(!value||!['pet','bed','berry','letter'].includes(value.action||''))throw new Error('Invalid action');if(value.action==='letter')return {accepted:openLetter()};act(value.action as Action);return {accepted:true};}}, {signal:abort.signal});}catch{/* Optional browser API. */}
+  try{doc.modelContext.registerTool({name:'play_with_jakae',description:'Pet or wake Jakae, sleep, eat a strawberry, or receive a limited letter.',inputSchema:{type:'object',properties:{action:{type:'string',enum:['pet','bed','berry','letter']}},required:['action'],additionalProperties:false},execute:async(input:unknown)=>{const value=input as {action?:string};if(!value||!['pet','bed','berry','letter'].includes(value.action||''))throw new Error('Invalid action');if(value.action==='letter')return {accepted:await openLetter()};act(value.action as Action);return {accepted:true};}}, {signal:abort.signal});}catch{/* Optional browser API. */}
   return()=>abort.abort();
  },[ready]);
  return <main style={{'--sky':a.bg} as React.CSSProperties}>
   <header><div className="wordmark"><h1 className="image-title"><img src="/title.png" alt="작애의 방 · JAKAE’S ROOM" width="2078" height="757"/></h1></div><div className="clock"><span className="live-dot"/>{a.name}<time>{String(now.hour).padStart(2,'0')}:{String(now.minute).padStart(2,'0')} <small>KST</small></time></div></header>
   <section className="stage" aria-label="작애가 살고 있는 3D 방">
-   <SceneError><Canvas onPointerLeave={()=>setRoomCursor('normal')} orthographic shadows dpr={[1,1.5]} camera={{position:[12,13,16],zoom:60,near:.1,far:80}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=T.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;}}>
+   <SceneError><Canvas onPointerLeave={()=>setRoomCursor('normal')} onPointerMissed={()=>{void requestLetterEvent('interrupt');}} orthographic shadows dpr={[1,1.5]} camera={{position:[12,13,16],zoom:60,near:.1,far:80}} gl={{antialias:true,alpha:true,powerPreference:'high-performance'}} onCreated={({gl})=>{gl.toneMapping=T.ACESFilmicToneMapping;gl.toneMappingExposure=1.05;}}>
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
-    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
+    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy} sleeping={mood==='sleep'}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
    <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><div className="music-utility-row"><HelpModal/><Bgm phase={phase}/></div></div>
   </section>
   <footer><div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
-   <button aria-label="딸기 주기" disabled={!ready||busy} onClick={()=>act('berry')}><img src="/btn_02.png" alt=""/></button>
-   <button aria-label="침대로 가기" disabled={!ready||busy} onClick={()=>act('bed')}><img src="/btn_03.png" alt=""/></button>
-   <button aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={openLetter}><img src="/btn_04.png" alt=""/></button>
-  </nav><div className="action-extras"><AdminPanel admin={admin}/>{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}{process.env.NODE_ENV==='development'&&<button onClick={()=>storeCounts(readCounts(null))}>편지 리셋</button>}</div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
-  <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
+   <button aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
+   <PlayMenu disabled={!ready||busy} onAction={act}/>
+   <button aria-label="도감 보기" onClick={()=>{playSfx('ui');setCollectionOpen(true);}}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
+  </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
+  <PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
+  <dialog ref={dialog} className="letter" onClose={()=>{(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
  </main>;
 }
 
@@ -148,3 +189,4 @@ export default function Room(){
 
 
 
+export default function GiftRoom(){return <GiftProvider><Room/></GiftProvider>;}

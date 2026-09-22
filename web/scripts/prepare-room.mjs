@@ -9,7 +9,7 @@ import fs from 'node:fs/promises';
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.encoder':MeshoptEncoder});
 const doc = await io.read('public/models/room.glb');
 // Replace only the approved wardrobe assembly and add its adjacent display cabinet.
-const cabinet = await io.read('public/models/display-cabinet-v001.glb');
+const cabinet = await io.read('public/models/display-cabinet-v002.glb');
 const replacementNames = new Set(cabinet.getRoot().listNodes().map(n => n.getName()));
 for (const node of doc.getRoot().listNodes()) if (replacementNames.has(node.getName())) node.dispose();
 const roomScene = doc.getRoot().getDefaultScene();
@@ -25,6 +25,9 @@ const removedPlantPrefixes=['DEN_LeftWallCascade','DEN_WardrobeTrailing','DEN_Wa
 for (const node of doc.getRoot().listNodes()) if(removedPlantPrefixes.some(prefix=>node.getName().startsWith(prefix))) removed.add(node.getName());
 removed.add('DEN_WardrobeSidePlantLedge');
 removed.add('DECOR_NeutralArt_0');
+// Leave the bathroom-side wall bare; preserve decor on the other wall.
+removed.add('DECOR_NeutralArt_1');
+for (const node of doc.getRoot().listNodes()) if(node.getName().startsWith('DEN_LeftGallery')) removed.add(node.getName());
 removed.add('PH1_Chair_Back');
 const chairLift=.415; // Seat top at 0.95, supporting the computer-sitting pose.
 for (const node of doc.getRoot().listNodes()) {

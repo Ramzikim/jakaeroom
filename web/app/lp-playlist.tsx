@@ -9,7 +9,7 @@ import music from './music-files.json';
 import {MusicIcon} from './music-icon';
 import {claimLpMusic} from './music-source';
 import {nextTrack,endedTrack,type PlayMode} from './playback-mode';
-
+import {requestLetterEvent} from './letter-events';
 export function LpPlaylist({children}:{children:ReactNode}){
  const [open,setOpen]=useState(false),[selected,setSelected]=useState(0),[playing,setPlaying]=useState(false),[error,setError]=useState('');
  const [mode,setMode]=useState<PlayMode>('all');
@@ -28,7 +28,7 @@ export function LpPlaylist({children}:{children:ReactNode}){
  function stop(){request.current++;audio.current?.pause();setPlaying(false);}
  function skip(direction:1|-1){finished.current=0;const index=direction<0?(selected-1+music.tracks.length)%music.tracks.length:nextTrack(mode,selected,music.tracks.length);if(audio.current)audio.current.currentTime=0;void play(index);}
  return <group position={[2.15,.855,3.57]}>
-  <group onClick={e=>{e.stopPropagation();if(!position)move(e.nativeEvent.clientX+24,e.nativeEvent.clientY-300);setOpen(v=>!v);}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}>{children}</group>
+  <group onClick={e=>{e.stopPropagation();void requestLetterEvent('interrupt');if(!position)move(e.nativeEvent.clientX+24,e.nativeEvent.clientY-300);setOpen(v=>!v);}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}>{children}</group>
   {position&&<Html><DomPortal>   <audio ref={audio} data-music-source="lp" preload="none" onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>{finished.current++;const next=endedTrack(mode,selected,music.tracks.length,repeat,finished.current);if(next===null){stop();return;}if(audio.current)audio.current.currentTime=0;void play(next,true);}} onError={()=>{setPlaying(false);setError('음원을 불러오지 못했어요.');}}/>
    <div ref={panel} className="lp-playlist lp-floating" style={{left:position.x,top:position.y}} hidden={!open} role="dialog" aria-label="작애의 플레이리스트" onKeyDown={e=>{if(e.key==='Escape')setOpen(false);}}>
     <header title="드래그해서 이동" onPointerDown={e=>{if(e.button!==0||(e.target as HTMLElement).closest('button'))return;e.preventDefault();drag.current={id:e.pointerId,x:e.clientX-position.x,y:e.clientY-position.y};e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(drag.current?.id===e.pointerId)move(e.clientX-drag.current.x,e.clientY-drag.current.y);}} onPointerUp={e=>{if(drag.current?.id===e.pointerId){drag.current=null;e.currentTarget.releasePointerCapture(e.pointerId);}}} onPointerCancel={()=>{drag.current=null;}}><img src={music.icons.music} alt=""/><div><strong>작애의 플레이리스트</strong><small>듣고 싶은 곡을 골라줘어.</small></div><button aria-label="플레이리스트 닫기" onClick={()=>setOpen(false)}><img src={music.icons.out} alt=""/></button></header>
@@ -48,6 +48,5 @@ export function LpPlaylist({children}:{children:ReactNode}){
   </DomPortal></Html>}
  </group>;
 }
-
 
 

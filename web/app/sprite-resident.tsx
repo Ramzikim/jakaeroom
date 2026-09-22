@@ -1,6 +1,15 @@
 'use client';
 import {setRoomCursor} from './room-cursor';
+import {useGifts} from './gift-ui';
+import {selectShoppingGift,GIFT_COPY,SHOPPING_REACTIONS} from '../lib/gifts';
 import {MediaDisplay} from './media-display';
+import {recordPhotoAction} from './photo-acquisition';
+import {subscribeHugClose} from './photo-events';
+import {HUG_REACTIONS} from '../lib/photos';
+import {requestCoins} from './coin-events';
+import {requestLetterEvent} from './letter-events';
+import {actionRewardStarted} from '../lib/reward-actions';
+import {photoActionForSequence} from '../lib/photos';
 import {frameSfx,playSfx} from './sfx';
 import {shadowStyle,shadowSurfaceY} from './shadow';
 import {useEffect,useMemo,useRef,useState} from 'react';
@@ -18,23 +27,49 @@ const lengths=Object.fromEntries(Object.entries(frames).map(([k,v])=>[k,v.length
 const configureTextures=(textures:T.Texture[])=>{textures.forEach(t=>{if(t.colorSpace!==T.SRGBColorSpace){t.colorSpace=T.SRGBColorSpace;t.needsUpdate=true;}});};
 const moodFor=(sequence:Sequence):Mood=>sequence.includes('walk')?'walk':sequence==='sit_idle'?'sit':sequence==='sit_snooze'?'rest':sequence==='sit_sleeploop'?'sleep':sequence==='strawberry'?'berry':sequence==='hop'||sequence==='shy'?'pet':sequence==='bath'?'bath':sequence==='window'?'window':sequence==='game'?'game':'idle';
 export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:{command:{action:Action,id:number,target?:[number,number]}|null,onMood:(m:Mood)=>void,onReady:()=>void,onPet:()=>void,positionRef:React.MutableRefObject<T.Vector3>,phase:Band}){
+ const gifts=useGifts();
  const dialogue=useProfileDialogue(),profile=useJakaeProfile();
  const textures=useTexture(urls,configureTextures),carrier=useRef<T.Group>(null),sprite=useRef<T.Sprite>(null);
- const {gl}=useThree();
+ const {gl,camera}=useThree();
  const shadow=useRef<T.Mesh>(null);
  const shadowUniforms=useMemo(()=>({alpha:{value:.22},softness:{value:1}}),[]);
  const soundFrame=useRef(''),stepSide=useRef(0);
+ const photoFrame=useRef({sequence:'idle',started:0});
+ const letterFrame=useRef({sleeping:false,at:0});
  const frameClock=useRef({sequence:'idle' as Sequence,value:0});
  const life=useRef(createLife()),seenCommand=useRef<number|null>(null),lastMood=useRef<Mood>('idle');
  life.current.relationshipTier=profile?.relationshipTier||'normal';
  const [speech,setSpeech]=useState(life.current.speech);
+ const hugSpeech=useRef<string|null>(null);
+ useEffect(()=>subscribeHugClose(()=>{hugSpeech.current=HUG_REACTIONS[Math.floor(Math.random()*HUG_REACTIONS.length)];}),[]);
  const bubble=useRef<HTMLDivElement>(null);
  const [testSpeech,setTestSpeech]=useState<string|null>(null);
  useEffect(()=>{if(process.env.NODE_ENV==='development')setTestSpeech(new URLSearchParams(location.search).get('speech'));},[]);
  useEffect(()=>{onReady();},[textures,onReady]);
- useEffect(()=>{if(command&&command.id!==seenCommand.current){seenCommand.current=command.id;commandLife(life.current,command.action,Math.random,command.target,phase);}},[command,phase]);
+ useEffect(()=>{if(command&&command.id!==seenCommand.current){
+  seenCommand.current=command.id;const s=life.current,before={sequence:s.sequence,started:s.started};
+  const accepted=commandLife(s,command.action,Math.random,command.target,phase);
+  if(accepted&&command.action==='tv'&&s.media==='tv'){const gift=selectShoppingGift(gifts.owned,phase);if(gift){s.mediaGiftId=gift.id;s.mediaExtra=2;s.mediaTitle=`솜나라 홈쇼핑 · ${gift.name}`;s.mediaNews=GIFT_COPY[gift.id].script!;s.mediaReaction=SHOPPING_REACTIONS[Math.floor(Math.random()*SHOPPING_REACTIONS.length)];}}
+  void requestLetterEvent(command.action==='pet'&&actionRewardStarted(command.action,accepted,before,s)?'pet':'interrupt');
+  if(actionRewardStarted(command.action,accepted,before,s)){
+   const point=new T.Vector3(s.point[0],s.point[1]+.6,s.point[2]).project(camera),rect=gl.domElement.getBoundingClientRect();
+   void requestCoins({kind:'interaction',action:command.action},{x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2});
+   if(command.action==='pet')void recordPhotoAction('pet',{x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2});
+  }
+ }},[command,phase,camera,gl]);
  useFrame((_,delta)=>{
-  const s=life.current,oldX=s.point[0],oldZ=s.point[2];tickLife(s,delta,phase,lengths);
+  const s=life.current,oldX=s.point[0],oldZ=s.point[2];tickLife(s,s.mediaGiftId&&gifts.confirmId===s.mediaGiftId?0:delta,phase,lengths);
+  if(hugSpeech.current&&!document.querySelector('dialog[open]')){s.speech=hugSpeech.current;s.speechUntil=s.now+7;hugSpeech.current=null;}
+  const sleeping=s.sequence==='sit_snooze'||s.sequence==='sit_sleeploop',stamp=Date.now();
+  if(sleeping!==letterFrame.current.sleeping||stamp-letterFrame.current.at>=15_000){
+   const action=sleeping?'sleep':letterFrame.current.sleeping?'sleep_end':'awake';
+   letterFrame.current={sleeping,at:stamp};void requestLetterEvent(action);
+  }
+  if(photoFrame.current.sequence!==s.sequence||photoFrame.current.started!==s.started){
+   const action=photoActionForSequence(s.sequence,photoFrame.current.sequence,s.pending);
+   photoFrame.current={sequence:s.sequence,started:s.started};
+   if(action&&action!=='pet'){const point=new T.Vector3(s.point[0],s.point[1]+.6,s.point[2]).project(camera),rect=gl.domElement.getBoundingClientRect();void recordPhotoAction(s.media==='tv'?'tv':action,{x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2});}
+  }
   if(process.env.NODE_ENV==='development'){gl.domElement.dataset.sequence=s.sequence;gl.domElement.dataset.seat=s.node;gl.domElement.dataset.elapsed=String(Math.floor(s.now-s.started));}
   const mood=moodFor(s.sequence);if(lastMood.current!==mood){lastMood.current=mood;onMood(mood);}
   const line=s.now<s.speechUntil?s.speech:'';if(line!==speech)setSpeech(line);
