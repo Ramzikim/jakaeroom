@@ -11,7 +11,7 @@ for(const [band,id] of Object.entries({day:'somi_goods',afternoon:'lightning_kni
  assert.equal(GIFT_REGISTRY.filter(g=>g.band===band).length,1);
 }
 GIFT_REGISTRY.forEach((g,index)=>{
- assert.equal(g.imagePath,`/gifts/gift_0${index+1}.png`);
+ assert.equal(g.imagePath,`/gifts/gift_0${index+1}.webp`);
  assert.ok(existsSync(new URL(`../public${g.imagePath}`,import.meta.url)));
 });
 assert.equal(REGULAR_LETTER_IDS.length,28);

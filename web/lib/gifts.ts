@@ -4,13 +4,13 @@ import {letters} from '../app/letters.ts';
 export type GiftSource='cabinet_order'|'homeshopping'|'letter_completion';
 export type Gift={id:string;name:string;acquisitionType:GiftSource;price:number|null;band:Band|null;imagePath:string;isPurchasable:boolean};
 export const GIFT_REGISTRY:readonly Gift[]=[
- {id:'mimi_plush',imagePath:'/gifts/gift_01.png',name:'미미',acquisitionType:'cabinet_order',price:100,band:null,isPurchasable:true},
- {id:'singpa_plush',imagePath:'/gifts/gift_02.png',name:'싱파',acquisitionType:'cabinet_order',price:180,band:null,isPurchasable:true},
- {id:'somi_goods',imagePath:'/gifts/gift_03.png',name:'솜이',acquisitionType:'homeshopping',price:300,band:'day',isPurchasable:true},
- {id:'lightning_knight_figure',imagePath:'/gifts/gift_04.png',name:'번개기사',acquisitionType:'homeshopping',price:420,band:'afternoon',isPurchasable:true},
- {id:'starlight_sleep_lamp',imagePath:'/gifts/gift_05.png',name:'별빛무드등',acquisitionType:'homeshopping',price:600,band:'night',isPurchasable:true},
- {id:'strawberry_tower',imagePath:'/gifts/gift_06.png',name:'딸기타워',acquisitionType:'homeshopping',price:800,band:'dawn',isPurchasable:true},
- {id:'starlight_mailbox',imagePath:'/gifts/gift_07.png',name:'별빛편지함',acquisitionType:'letter_completion',price:null,band:null,isPurchasable:false},
+ {id:'mimi_plush',imagePath:'/gifts/gift_01.webp',name:'미미',acquisitionType:'cabinet_order',price:100,band:null,isPurchasable:true},
+ {id:'singpa_plush',imagePath:'/gifts/gift_02.webp',name:'싱파',acquisitionType:'cabinet_order',price:180,band:null,isPurchasable:true},
+ {id:'somi_goods',imagePath:'/gifts/gift_03.webp',name:'솜이',acquisitionType:'homeshopping',price:300,band:'day',isPurchasable:true},
+ {id:'lightning_knight_figure',imagePath:'/gifts/gift_04.webp',name:'번개기사',acquisitionType:'homeshopping',price:420,band:'afternoon',isPurchasable:true},
+ {id:'starlight_sleep_lamp',imagePath:'/gifts/gift_05.webp',name:'별빛무드등',acquisitionType:'homeshopping',price:600,band:'night',isPurchasable:true},
+ {id:'strawberry_tower',imagePath:'/gifts/gift_06.webp',name:'딸기타워',acquisitionType:'homeshopping',price:800,band:'dawn',isPurchasable:true},
+ {id:'starlight_mailbox',imagePath:'/gifts/gift_07.webp',name:'별빛편지함',acquisitionType:'letter_completion',price:null,band:null,isPurchasable:false},
 ];
 export const getGiftById=(id:string)=>GIFT_REGISTRY.find(g=>g.id===id);
 export const getHomeshoppingGiftForBand=(band:Band)=>GIFT_REGISTRY.find(g=>g.acquisitionType==='homeshopping'&&g.band===band);

@@ -48,12 +48,12 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
  const wardrobePending=useRef(false);
  async function clickPhotoProp(action:'wardrobe'|'drawer',origin:{x:number;y:number}){
   if(wardrobePending.current||document.querySelector('dialog[open]'))return;
-  wardrobePending.current=true;playSfx('ui');showPropMessage('추억을 찾아보고 있어요…');
+  wardrobePending.current=true;playSfx('ui');showPropMessage(photoPropMessage(action,gifts.collectedPhotoIds));
   try{
    await requestLetterEvent(action==='drawer'?'drawer':'interrupt');
    const result=sleeping?undefined:await recordPhotoAction(action,origin);
    if(result?.photoId)showPropMessage('');
-   else showPropMessage(result?.error?'사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.':photoPropMessage(action,result?.progression?.collected_photo_ids??[]));
+   else if(result?.error)showPropMessage('사진을 불러오지 못했어요. 잠시 후 다시 눌러 주세요.');
   }catch{showPropMessage('잠시 후 다시 눌러 주세요.');}finally{wardrobePending.current=false;}
  }
  const ripple=useRef<T.Mesh<T.RingGeometry,T.MeshBasicMaterial>>(null),rippleAge=useRef(1);

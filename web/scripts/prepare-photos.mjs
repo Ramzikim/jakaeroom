@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import sharp from 'sharp';
 const categories=['food','outfit','window','happy','hug'];
 const catalog=[];
 for(const category of categories){
@@ -6,8 +7,9 @@ for(const category of categories){
  const files=(await fs.readdir(source)).filter(f=>/\.(png|jpe?g|webp)$/i.test(f)).sort();
  await fs.mkdir(target,{recursive:true});
  for(const [index,file] of files.entries()){
-  await fs.copyFile(`${source}/${file}`,`${target}/${file}`);
-  catalog.push({id:`${category}_${String(index+1).padStart(2,'0')}`,category,assetPath:`/library/photo_framed/${category}/${file}`,available:true});
+  const output=file.replace(/\.[^.]+$/,'.webp');
+  await sharp(`${source}/${file}`).webp({quality:80}).toFile(`${target}/${output}`);
+  catalog.push({id:`${category}_${String(index+1).padStart(2,'0')}`,category,assetPath:`/library/photo_framed/${category}/${output}`,available:true});
  }
 }
 await fs.writeFile('lib/photo-catalog.json',JSON.stringify(catalog,null,2)+'\n');

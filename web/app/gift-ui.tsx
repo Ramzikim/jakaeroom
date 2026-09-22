@@ -8,7 +8,7 @@ import type {Progression} from '../lib/progression';
 import type {Band} from './behavior';
 import {playSfx} from './sfx';
 import './gift-ui.css';
-const Context=createContext<{owned:readonly string[];confirmId:string|null;openCabinet:()=>void;offer:(gift:Gift,band?:Band)=>void}>({owned:[],confirmId:null,openCabinet:()=>{},offer:()=>{}});
+const Context=createContext<{owned:readonly string[];collectedPhotoIds:readonly string[];confirmId:string|null;openCabinet:()=>void;offer:(gift:Gift,band?:Band)=>void}>({owned:[],collectedPhotoIds:[],confirmId:null,openCabinet:()=>{},offer:()=>{}});
 export const useGifts=()=>useContext(Context);
 export function GiftPrice({price}:{price:number|null}){return <span className="gift-price">{price===null?'편지 수집 보상':<><img src="/heart_coin.png?v=heart-coin-1" alt="하트코인"/>{price.toLocaleString('ko-KR')}</>}</span>;}
 function GiftDialog({title,onClose,children,small=false,blocked=false}:{title:string;onClose:()=>void;children:ReactNode;small?:boolean;blocked?:boolean}){
@@ -49,7 +49,7 @@ export function GiftProvider({children}:{children:ReactNode}){
    }catch{setError('구매하지 못했어요. 다시 시도해 주세요.');}
   });busy.current=false;setPending(false);
  }
- return <Context.Provider value={{owned,confirmId:confirmation?.gift.id??null,openCabinet:()=>{playSfx('ui');setCabinet(true);},offer}}>{children}
+ return <Context.Provider value={{owned,collectedPhotoIds:progression?.collected_photo_ids??[],confirmId:confirmation?.gift.id??null,openCabinet:()=>{playSfx('ui');setCabinet(true);},offer}}>{children}
  {cabinet&&<GiftDialog title="작애의 선물 장식장" onClose={()=>setCabinet(false)}><div className="gift-grid">{GIFT_REGISTRY.map(gift=>{const has=owned.includes(gift.id),copy=GIFT_COPY[gift.id];return <article className="gift-card" key={gift.id}>
  <div className="gift-thumbnail">{has?<img src={gift.imagePath+(gift.id==='starlight_mailbox'?'?v=2':'')} alt={gift.name}/>:<span role="img" aria-label="미보유 선물">🔒</span>}</div><h3>{gift.name}</h3><GiftPrice price={gift.price}/><p>{has?copy.description:copy.hint}</p>
  {has?<strong className="gift-owned">보유 중</strong>:gift.acquisitionType==='cabinet_order'?<button onClick={()=>offer(gift)}>구매하기</button>:null}</article>;})}</div><button className="gift-done" onClick={()=>setCabinet(false)}>닫기</button></GiftDialog>}
