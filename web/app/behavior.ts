@@ -66,6 +66,8 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
   const direction=walkSequence(path[0][0]-s.point[0],path[0][1]-s.point[2]);
   if(s.sequence!==direction)change(s,direction);return true;
  }
+ // Waking looks like petting, but never consumes or checks the pet window.
+ if(s.sequence==='sit_sleeploop'&&action==='pet'){place(s,'bedRight','bed');s.awakeUntil=s.now+75+rng()*35;change(s,rng()<.5?'hop':'shy');say(s,'으으음… 잘 잤다아!');return true;}
  if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];
  if(action==='pet'){
   if((locked(s)&&s.sequence!=='sit_sleeploop')||s.cushionRequested)return false;
@@ -78,7 +80,6 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
   say(s,pick(windowLines[band],rng));return true;
  }
  if(s.sequence==='window'){place(s,'bedRight','bed');idle(s,rng);}
- if(s.sequence==='sit_sleeploop'&&action==='pet'){place(s,'bedRight','bed');s.awakeUntil=s.now+75+rng()*35;change(s,rng()<.5?'hop':'shy');say(s,'으으음… 잘 잤다아!');return true;}
  if(action==='basketBerry'){
   if(locked(s))return false;
   s.cushionRequested=false;s.basketBerry=true;place(s,'rug','cushion');s.destination='cushion';change(s,'strawberry');say(s,'딸기다아! 잘 먹을게애.');return true;
