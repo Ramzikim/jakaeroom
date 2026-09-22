@@ -28,6 +28,8 @@ removed.add('DECOR_NeutralArt_0');
 // Leave the bathroom-side wall bare; preserve decor on the other wall.
 removed.add('DECOR_NeutralArt_1');
 for (const node of doc.getRoot().listNodes()) if(node.getName().startsWith('DEN_LeftGallery')) removed.add(node.getName());
+// Six drawings beside the window are rendered as interactive, aspect-correct frames.
+for(const node of doc.getRoot().listNodes())if(/^(DEN_BackGallery[0-3]|DEN_WindowMiniCard[01])/.test(node.getName()))removed.add(node.getName());
 removed.add('PH1_Chair_Back');
 const chairLift=.415; // Seat top at 0.95, supporting the computer-sitting pose.
 for (const node of doc.getRoot().listNodes()) {

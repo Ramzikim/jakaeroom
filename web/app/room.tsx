@@ -23,6 +23,7 @@ import {playSfx,setSfxEnabled} from './sfx';
 import {GiftProvider,useGifts} from './gift-ui';
 import {CabinetGifts} from './cabinet-gifts';
 import {TableProps} from './table-props';
+import {ArtworkFrames,ArtworkPopup} from './artwork';
 import {PlayMenu} from './play-menu';
 import {AccentLamps} from './accent-lamps';
 import {WindowSky} from './window-sky';
@@ -40,9 +41,9 @@ class SceneError extends Component<{children:React.ReactNode},{failed:boolean}>{
 }
 function Loading(){return <Html center><div className="load-card"><span>✿</span><p>작애가 방을 치우고 있어요..</p><progress/></div></Html>;}
 
-function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,onBed,disabled,sleeping}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,onBed:()=>void,disabled:boolean,sleeping:boolean}){
+function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGame,onBed,onAlbum,onArtwork,disabled,sleeping}:{phase:keyof typeof atmospheres,onBath:()=>void,onCushion:()=>void,onWindow:()=>void,onBasket:()=>void,onFloor:(point:Point)=>void,onTv:()=>void,onGame:()=>void,onBed:()=>void,onAlbum:()=>void,onArtwork:(index:number)=>void,disabled:boolean,sleeping:boolean}){
  const gifts=useGifts();
- const {scene}=useGLTF('/models/room-web.glb?v=bare-left-wall-v001');
+ const {scene}=useGLTF('/models/room-web.glb?v=drawing-gallery-v001');
  const room=useMemo(()=>{const clone=scene.clone(true);clone.traverse(o=>{if(o instanceof T.Mesh){o.castShadow=true;o.receiveShadow=true;}});return clone;},[scene]);
  const a=atmospheres[phase];
  const photoPending=useRef({wardrobe:false,drawer:false});
@@ -72,7 +73,7 @@ function Environment({phase,onBath,onCushion,onWindow,onBasket,onFloor,onTv,onGa
  return <group>
   {!disabled&&<mesh name="WardrobePhotoHotspot" position={[-3.49,1.27,-2.756]} onClick={e=>{e.stopPropagation();if(e.button===0)void clickPhotoProp('wardrobe',{x:e.clientX,y:e.clientY});}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[.04,2.54,2.28]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>}
   <mesh name="RecordPlayerDrawerHotspot" position={[2.15,.48,3.94]} onClick={e=>{e.stopPropagation();if(e.button===0)void clickPhotoProp('drawer',{x:e.clientX,y:e.clientY});}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>{setRoomCursor('normal');}}><boxGeometry args={[.65,.57,.06]}/><meshBasicMaterial transparent opacity={0} depthWrite={false}/></mesh>
-  <primitive object={room} onClick={(e:import("@react-three/fiber").ThreeEvent<MouseEvent>)=>{void requestLetterEvent('interrupt');if(!disabled&&e.button===0&&e.point.y<.08){e.stopPropagation();if(ripple.current){ripple.current.position.set(e.point.x,e.point.y+.012,e.point.z);ripple.current.scale.setScalar(.084);ripple.current.material.opacity=.8;ripple.current.visible=true;rippleAge.current=0;}onFloor([e.point.x,e.point.z]);}}}/><TableProps onBasket={onBasket} disabled={disabled}/>
+  <primitive object={room} onClick={(e:import("@react-three/fiber").ThreeEvent<MouseEvent>)=>{void requestLetterEvent('interrupt');if(!disabled&&e.button===0&&e.point.y<.08){e.stopPropagation();if(ripple.current){ripple.current.position.set(e.point.x,e.point.y+.012,e.point.z);ripple.current.scale.setScalar(.084);ripple.current.material.opacity=.8;ripple.current.visible=true;rippleAge.current=0;}onFloor([e.point.x,e.point.z]);}}}/><TableProps onBasket={onBasket} onAlbum={onAlbum} disabled={disabled}/><ArtworkFrames onOpen={onArtwork}/>
   <mesh ref={ripple} visible={false} rotation={[-Math.PI/2,0,0]} raycast={()=>{}}>
    <ringGeometry args={[.87,1,48]}/><meshBasicMaterial color="#fff2da" transparent opacity={0} depthWrite={false} toneMapped={false}/>
   </mesh>
@@ -127,6 +128,8 @@ function Room(){
  const letterPending=useRef(false);
  const [letterLoading,setLetterLoading]=useState(false);
  const [collectionOpen,setCollectionOpen]=useState(false);
+ const [artworkOpen,setArtworkOpen]=useState<number|null>(null);
+ const openCollection=()=>{playSfx('ui');setCollectionOpen(true);};
  const letterReturnFocus=useRef<HTMLElement|null>(null);
  const dialog=useRef<HTMLDialogElement>(null),letterButton=useRef<HTMLButtonElement>(null),positionRef=useRef(new T.Vector3(1.65,.7,-.55));
  const phase=admin.isAdmin?(admin.band||now.period):(override||now.period),a=atmospheres[phase];
@@ -176,7 +179,7 @@ function Room(){
     <SoftShadows size={18} samples={12} focus={.4}/>
     <ambientLight intensity={a.ambient} color={a.fill}/><hemisphereLight args={[a.fill,'#aa8269',a.hemi]}/>
     <directionalLight castShadow position={[-3,9,5]} intensity={a.key} color={a.sun} shadow-mapSize={[2048,2048]} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8} shadow-bias={-.0004} shadow-normalBias={.025}/>
-    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy} sleeping={mood==='sleep'}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
+    <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onAlbum={openCollection} onArtwork={setArtworkOpen} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy} sleeping={mood==='sleep'}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
    <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><div className="music-utility-row"><HelpModal/><Bgm phase={phase}/></div></div>
@@ -185,9 +188,9 @@ function Room(){
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
    <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
    <PlayMenu disabled={!ready||busy} onAction={act}/>
-   <button aria-label="도감 보기" onClick={()=>{playSfx('ui');setCollectionOpen(true);}}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
+   <button aria-label="도감 보기" onClick={openCollection}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
   </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
-  <PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
+  <ArtworkPopup index={artworkOpen} onClose={()=>setArtworkOpen(null)}/><PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
   <dialog ref={dialog} data-collection-ui aria-busy={letterLoading} className="letter" onClose={()=>{(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letterLoading?'편지를 가져오고 있어요…':letter.title}</h2><p className="letter-body">{letterLoading?'잠시만 기다려 주세요.':dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
  </main>;
 }

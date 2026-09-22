@@ -62,9 +62,9 @@ function RecordPlayer(){return <group>
  <mesh position={[.19,.153,.125]}><cylinderGeometry args={[.03,.035,.028,12]}/><meshStandardMaterial color={wood}/></mesh>
  {[0,1,2].map(i=><Box key={i} size={[.22,.008,.005]} position={[0,.04+i*.018,.192]} color="#ac6c7c"/>)}
  </group>;}
-export function TableProps({onBasket,disabled}:{onBasket:()=>void,disabled:boolean}){return <group>
+export function TableProps({onBasket,onAlbum,disabled}:{onBasket:()=>void,onAlbum:()=>void,disabled:boolean}){return <group>
  <group position={[.83,.445,1.78]} onClick={e=>{e.stopPropagation();if(!disabled){playSfx("ui");onBasket();}}} onPointerOver={e=>{e.stopPropagation();setRoomCursor(disabled?'normal':'click');}} onPointerOut={()=>{setRoomCursor('normal');}}><Basket/></group>
- <group position={[1.4,.445,1.5]}><Album/></group>
+ <group name="AlbumCollectionHotspot" position={[1.4,.445,1.5]} onClick={e=>{e.stopPropagation();if(e.button===0&&!document.querySelector('dialog[open]'))onAlbum();}} onPointerOver={e=>{e.stopPropagation();setRoomCursor('click');}} onPointerOut={()=>setRoomCursor('normal')}><Album/></group>
  <LpPlaylist><RecordPlayer/></LpPlaylist>
  <group position={[3.69,1.125,3.57]} scale={1.15}><Plant/></group>
  </group>;}
