@@ -20,9 +20,11 @@ for(const sequence of ['sit_snooze','sit_sleeploop'])assert.equal(photoActionFor
 assert.equal(photoActionForSequence('hop','sit_sleeploop',null),null);
 assert.equal(photoActionForSequence('walk_right','idle','sleep'),null);
 assert.equal(photoActionForSequence('walk_right','walk_left',null),null);
-for(const [action,expected] of [['berry','food'],['window','window'],['cushion','cushion'],['tv','cushion'],['game','game'],['pet','pet']] as const){
+assert.equal(photoActionForSequence('walk_right','idle',null),null,'automatic walking cannot drop');
+assert.equal(photoActionForSequence('sit_idle','walk_right',null),null,'automatic sitting cannot drop');
+for(const [action,expected] of [['berry','food'],['window','window'],['cushion','cushion'],['tv','tv'],['game','game'],['pet','pet']] as const){
  const life=createLife();commandLife(life,action,()=>.5,undefined,'day');
- assert.equal(photoActionForSequence(life.sequence,'idle',life.pending),expected,action);
+ assert.equal(photoActionForSequence(life.sequence,'idle',life.pending,life),expected,action);
 }
 const refused=createLife();refused.now=20;refused.pets=[1,2,3,4,5];commandLife(refused,'pet',()=>.5);
 assert.equal(photoActionForSequence(refused.sequence,'idle',refused.pending),null);

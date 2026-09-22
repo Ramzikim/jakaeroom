@@ -57,9 +57,14 @@ export function commandLife(s:Life,action:Action,rng=Math.random,target?:Point,b
  if(s.sequence==='sit_idle'){s.cushionRequested=false;s.path=[];s.pending=null;}
  if(action==='move'){
   if(locked(s)||!target)return false;
+  const walking=s.sequence.includes('walk'),last=s.path.at(-1);
+  if(walking&&s.destination==='floor'&&last&&Math.hypot(last[0]-target[0],last[1]-target[1])<.04)return false;
   const start:Point=s.point[1]>.3?[positions.bedRight[0],positions.bedRight[2]]:[s.point[0],s.point[2]];
   const path=floorPath(start,target);if(!path.length)return false;
-  ground(s);s.pending=null;s.path=path;s.destination='floor';s.speech='';change(s,walkSequence(path[0][0]-s.point[0],path[0][1]-s.point[2]));return true;
+  if(!walking)ground(s);
+  s.node='floor';s.pending=null;s.path=path;s.destination='floor';s.speech='';
+  const direction=walkSequence(path[0][0]-s.point[0],path[0][1]-s.point[2]);
+  if(s.sequence!==direction)change(s,direction);return true;
  }
  if(s.pets.length&&s.now-s.pets[0]>=RULES.petWindow)s.pets=[];
  if(action==='pet'){

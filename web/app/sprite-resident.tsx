@@ -49,6 +49,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
  useEffect(()=>{if(command&&command.id!==seenCommand.current){
   seenCommand.current=command.id;const s=life.current,before={sequence:s.sequence,started:s.started};
   const accepted=commandLife(s,command.action,Math.random,command.target,phase);
+  if(accepted&&command.action==='move'&&s.sequence.includes('walk'))void recordPhotoAction('walk');
   if(accepted&&command.action==='tv'&&s.media==='tv'){const gift=selectShoppingGift(gifts.owned,phase);if(gift){s.mediaGiftId=gift.id;s.mediaExtra=2;s.mediaTitle=`솜나라 홈쇼핑 · ${gift.name}`;s.mediaNews=GIFT_COPY[gift.id].script!;s.mediaReaction=SHOPPING_REACTIONS[Math.floor(Math.random()*SHOPPING_REACTIONS.length)];}}
   void requestLetterEvent(command.action==='pet'&&actionRewardStarted(command.action,accepted,before,s)?'pet':'interrupt');
   if(actionRewardStarted(command.action,accepted,before,s)){
@@ -66,7 +67,7 @@ export function SpriteResident({command,onMood,onReady,onPet,positionRef,phase}:
    letterFrame.current={sleeping,at:stamp};void requestLetterEvent(action);
   }
   if(photoFrame.current.sequence!==s.sequence||photoFrame.current.started!==s.started){
-   const action=photoActionForSequence(s.sequence,photoFrame.current.sequence,s.pending);
+   const action=photoActionForSequence(s.sequence,photoFrame.current.sequence,s.pending,s);
    photoFrame.current={sequence:s.sequence,started:s.started};
    if(action&&action!=='pet'){const point=new T.Vector3(s.point[0],s.point[1]+.6,s.point[2]).project(camera),rect=gl.domElement.getBoundingClientRect();void recordPhotoAction(s.media==='tv'?'tv':action,{x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2});}
   }

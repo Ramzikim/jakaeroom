@@ -25,9 +25,11 @@ export function photoPropMessage(action:'wardrobe'|'drawer',ids:readonly string[
 }
 export function availablePhotoCatalog(){return PHOTO_REGISTRY.filter(p=>p.available).map(p=>({id:p.id,category:p.category}));}
 // Only genuine animation transitions qualify; refusals remain idle and never roll.
-export function photoActionForSequence(sequence:string,previous:string,pending:string|null):PhotoAction|null{
+export function photoActionForSequence(sequence:string,previous:string,pending:string|null,context:{cushionRequested?:boolean;media?:string|null}={}):PhotoAction|null{
  if(pending==='sleep'||sequence.startsWith('sit_sleep')||sequence==='sit_snooze'||previous==='sit_snooze'||previous==='sit_sleeploop')return null;
- if(sequence.includes('walk'))return previous.includes('walk')?null:'walk';
+ // Walking rewards originate only from an accepted floor command, never autonomous transitions.
+ if(sequence.includes('walk'))return null;
+ if(sequence==='sit_idle')return context.media==='tv'?'tv':context.cushionRequested?'cushion':null;
  const actions:Record<string,PhotoAction>={hop:'pet',shy:'pet',strawberry:'food',window:'window',game:'game',sit_idle:'cushion',bath:'bath'};
  return actions[sequence]??null;
 }
