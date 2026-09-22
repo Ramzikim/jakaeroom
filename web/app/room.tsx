@@ -8,8 +8,9 @@ import * as T from 'three';
 import type {OrbitControls as OrbitControlsType} from 'three-stdlib';
 import {kstDate,readCounts,type Action,type LetterCounts} from './behavior';
 import {useProfileDialogue} from './profile-ui';
-import {getLetter} from './letters';
-import {requestLetterEvent} from './letter-events';
+import {getLetter,selectLetter} from './letters';
+import {getProgressionSnapshot,useProgression} from './progression-store';
+import {requestLetterEvent,type LetterEventResult} from './letter-events';
 import {recordPhotoAction} from './photo-acquisition';
 import {photoPropMessage} from '../lib/photos';
 import {PropMessage,showPropMessage,updatePropMessage,isPropMessageCurrent} from './prop-message';
@@ -122,11 +123,14 @@ function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
 
 function Room(){
  const admin=useAdminTools();
+ const letterProgress=useProgression();
+ const [guestLetterReady,setGuestLetterReady]=useState(false);
  const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
  usePreloadCollectionImages(ready);
  const dialogue=useProfileDialogue();
  const letterPending=useRef(false);
- const [letterLoading,setLetterLoading]=useState(false);
+ const [letterError,setLetterError]=useState('');
+ const letterCache=useRef<LetterEventResult|null>(null),letterView=useRef(0),retryLetterEvent=useRef<string|null>(null),letterAccount=useRef(0),letterIdentity=useRef<string|null|undefined>(undefined);
  const [collectionOpen,setCollectionOpen]=useState(false);
  const [artworkOpen,setArtworkOpen]=useState<number|null>(null);
  const openCollection=()=>{playSfx('ui');setCollectionOpen(true);};
@@ -140,8 +144,8 @@ function Room(){
  const storeCounts=(next:LetterCounts)=>{countRef.current=next;setCounts(next);try{localStorage.setItem('jakae-letter-counts',JSON.stringify(next));}catch{}};
  useEffect(()=>{
   let active=true;
-  const sync=()=>{void requestLetterEvent('load').then(result=>{if(active&&result){const next={...readCounts(null),...result.state.counts,date:result.state.date};countRef.current=next;setCounts(next);}});};
-  sync();const subscription=authClient()?.auth.onAuthStateChange(()=>{setTimeout(sync,0);});
+  const sync=()=>{const account=letterAccount.current;void requestLetterEvent('load').then(result=>{if(active&&result&&account===letterAccount.current){letterCache.current=result;setGuestLetterReady(result.userId===null);const next={...readCounts(null),...result.state.counts,date:result.state.date};countRef.current=next;setCounts(next);}});};
+  sync();const subscription=authClient()?.auth.onAuthStateChange((_event,session)=>{const id=session?.user.id??null;if(letterIdentity.current!==id){letterIdentity.current=id;letterAccount.current++;setGuestLetterReady(false);letterCache.current=null;retryLetterEvent.current=null;letterView.current++;dialog.current?.close();}setTimeout(sync,0);});
   return()=>{active=false;subscription?.data.subscription.unsubscribe();};
  },[]);
  useEffect(()=>{if(countRef.current.date!==kstDate())storeCounts(readCounts(null));},[now]);
@@ -153,17 +157,29 @@ function Room(){
  },[]);
  const act=(action:Action)=>{if(!document.querySelector('dialog[open]'))setCommand({action,id:Date.now()+Math.random()});};
  const openLetter=async(rereadId?:string)=>{
-  if(dialog.current?.open||letterPending.current||(!rereadId&&document.querySelector('dialog[open]')))return false;
+  if(dialog.current?.open||(!rereadId&&letterPending.current)||(!rereadId&&document.querySelector('dialog[open]')))return false;
+  const saved=getProgressionSnapshot();
+  const cached=saved.progression?.collected_letter_ids??(saved.userId===null&&letterCache.current?.userId===null?letterCache.current.collected:null);
+  // All text is bundled. Only acquisition/persistence needs a server round trip.
+  const preview=rereadId?getLetter(rereadId):cached?selectLetter(cached):null;
+  if(!preview)return false;
+  if(!rereadId){const state=saved.progression?.letter_state??letterCache.current?.state;if(state?.date===kstDate()&&(state.counts[phase]??0)>=2)return false;}
   letterReturnFocus.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
-  letterPending.current=true;setLetterLoading(true);dialog.current?.showModal();
+  const view=++letterView.current;setLetterError('');setLetter(preview);dialog.current?.showModal();playSfx('paper');
+  const rect=letterButton.current?.getBoundingClientRect();
+  const origin=rect?{x:rect.left+rect.width/2,y:rect.top}:undefined;
+  if(rereadId){void requestLetterEvent('reread',rereadId,origin);return true;}
+  letterPending.current=true;const eventId=retryLetterEvent.current??crypto.randomUUID();retryLetterEvent.current=eventId;
   try{
-   const rect=letterButton.current?.getBoundingClientRect();
-   const result=await requestLetterEvent(rereadId?'reread':'regular',rereadId,rect?{x:rect.left+rect.width/2,y:rect.top}:undefined);
-   if(!result){dialog.current?.close();return false;}
-   storeCounts({...readCounts(null),...result.state.counts,date:result.state.date});
-   const next=result.letterId?getLetter(result.letterId):null;if(!next){dialog.current?.close();return false;}
-   setLetter(next);playSfx('paper');return true;
-  }finally{letterPending.current=false;setLetterLoading(false);}
+   const result=await requestLetterEvent('regular',undefined,origin,eventId);
+   if(!result){if(view===letterView.current)setLetterError('저장을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');return false;}
+   if(retryLetterEvent.current===eventId)retryLetterEvent.current=null;
+   if(result.userId!==getProgressionSnapshot().userId)return false;
+   letterCache.current=result;storeCounts({...readCounts(null),...result.state.counts,date:result.state.date});
+   const confirmed=result.letterId?getLetter(result.letterId):null;
+   if(view===letterView.current){if(confirmed)setLetter(confirmed);else{dialog.current?.close();return false;}}
+   return !!confirmed;
+  }finally{letterPending.current=false;}
  };
  // Feature-detected agent access uses the same visible controls and local data.
  useEffect(()=>{
@@ -186,12 +202,12 @@ function Room(){
   </section>
   <footer><div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
-   <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
+   <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={limited||(!letterProgress.progression&&!guestLetterReady)} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
    <PlayMenu disabled={!ready||busy} onAction={act}/>
    <button aria-label="도감 보기" onClick={openCollection}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
   </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
   <ArtworkPopup index={artworkOpen} onClose={()=>setArtworkOpen(null)}/><PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
-  <dialog ref={dialog} data-collection-ui aria-busy={letterLoading} className="letter" onClose={()=>{(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letterLoading?'편지를 가져오고 있어요…':letter.title}</h2><p className="letter-body">{letterLoading?'잠시만 기다려 주세요.':dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
+  <dialog ref={dialog} data-collection-ui className="letter" onClose={()=>{letterView.current++;(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p>{letterError&&<p role="alert">{letterError}</p>}<p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
  </main>;
 }
 

@@ -39,3 +39,5 @@ function start(){
 }
 function subscribe(listener:()=>void){listeners.add(listener);if(!stop)start();return()=>{listeners.delete(listener);if(!listeners.size)stop?.();};}
 export function useProgression(){return useSyncExternalStore(subscribe,()=>snapshot,()=>empty);}
+
+export const getProgressionSnapshot=()=>snapshot;
