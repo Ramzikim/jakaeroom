@@ -1,4 +1,6 @@
 'use client';
+import {HelpModal} from './help-modal';
+import {Bgm} from './bgm';
 import {setRoomCursor} from './room-cursor';
 import {Component, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
@@ -127,7 +129,7 @@ export default function Room(){
     <Suspense fallback={<Loading/>}><Environment phase={phase} onBath={()=>act('bath')} onCushion={()=>act('cushion')} onWindow={()=>act('window')} onBasket={()=>act('basketBerry')} onTv={()=>act('tv')} onGame={()=>act('game')} onBed={()=>act('bed')} onFloor={target=>setCommand({action:'move',id:Date.now()+Math.random(),target})} disabled={busy}/><SpriteResident command={command} onMood={setMood} onReady={()=>setReady(true)} onPet={()=>act('pet')} positionRef={positionRef} phase={phase}/></Suspense>
     <Camera zoomEvent={zoomEvent}/>
    </Canvas></SceneError>
-   <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button></div>
+   <div className="view-controls image-controls"><button aria-label="축소" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:-1}))}><img src="/btn_05.png?v=f9c7efecdd" alt=""/></button><button aria-label="확대" onClick={()=>setZoomEvent(v=>({id:v.id+1,direction:1}))}><img src="/btn_06.png" alt=""/></button><div className="music-utility-row"><HelpModal/><Bgm phase={phase}/></div></div>
   </section>
   <footer><div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
@@ -138,6 +140,7 @@ export default function Room(){
   <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
  </main>;
 }
+
 
 
 
