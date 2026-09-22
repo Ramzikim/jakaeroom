@@ -2,6 +2,7 @@
 import {HelpModal} from './help-modal';
 import {Bgm} from './bgm';
 import {setRoomCursor} from './room-cursor';
+import {AdminPanel,useAdminTools} from './admin-tools';
 import {Component, Suspense, useEffect, useMemo, useRef, useState} from 'react';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {Html, OrbitControls, SoftShadows, useGLTF} from '@react-three/drei';
@@ -91,10 +92,11 @@ function Camera({zoomEvent}:{zoomEvent:{id:number,direction:number}}){
 }
 
 export default function Room(){
+ const admin=useAdminTools();
  const [now,setNow]=useState(kst()),[override,setOverride]=useState<keyof typeof atmospheres|null>(null),[command,setCommand]=useState<Command|null>(null),[mood,setMood]=useState<Mood>('idle'),[ready,setReady]=useState(false),[zoomEvent,setZoomEvent]=useState({id:0,direction:0}),[letter,setLetter]=useState(letters[0]);
  const dialogue=useProfileDialogue();
  const dialog=useRef<HTMLDialogElement>(null),letterButton=useRef<HTMLButtonElement>(null),positionRef=useRef(new T.Vector3(1.65,.7,-.55));
- const phase=override||now.period,a=atmospheres[phase];
+ const phase=admin.isAdmin?(admin.band||now.period):(override||now.period),a=atmospheres[phase];
  const [counts,setCounts]=useState<LetterCounts>(()=>readCounts(null));
  const countRef=useRef(counts);
  const busy=['pet','berry','bath','rest','sleep'].includes(mood);
@@ -136,7 +138,7 @@ export default function Room(){
    <button aria-label="딸기 주기" disabled={!ready||busy} onClick={()=>act('berry')}><img src="/btn_02.png" alt=""/></button>
    <button aria-label="침대로 가기" disabled={!ready||busy} onClick={()=>act('bed')}><img src="/btn_03.png" alt=""/></button>
    <button aria-label="작애의 편지 받기" ref={letterButton} disabled={limited} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={openLetter}><img src="/btn_04.png" alt=""/></button>
-  </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}{process.env.NODE_ENV==='development'&&<button onClick={()=>storeCounts(readCounts(null))}>편지 리셋</button>}</div>{process.env.NODE_ENV==='development'&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
+  </nav><div className="action-extras"><AdminPanel admin={admin}/>{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}{process.env.NODE_ENV==='development'&&<button onClick={()=>storeCounts(readCounts(null))}>편지 리셋</button>}</div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
   <dialog ref={dialog} className="letter" onClose={()=>letterButton.current?.focus()} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p><p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>마음에 담아 둘게</button></dialog>
  </main>;
 }
