@@ -25,8 +25,20 @@ let result=advanceLetters(state,ids.slice(0,21),'drawer',base+4000);assert.deepE
 state=emptyLetterState();owned=[];
 for(let w=0;w<3;w++)for(let p=0;p<5;p++){result=advanceLetters(state,owned,'pet',base+w*300_000+p*30_000);state=result.state;owned=result.owned;assert(!owned.includes('special_02'));}
 result=advanceLetters(state,owned,'awake',base+899999);assert.deepEqual(result.grants,[]);
-result=advanceLetters(state,owned,'awake',base+900000);assert.deepEqual(result.grants,['special_02']);assert.deepEqual(advanceLetters(result.state,result.owned,'awake',base+901000).grants,[]);
-state=advanceLetters(emptyLetterState(),[],'pet',base).state;result=advanceLetters(state,[],'pet',base+300000);assert.equal(result.state.pet?.start,base+300000);
+result=advanceLetters(state,owned,'awake',base+900000);assert.deepEqual(result.grants,[]);assert.equal(result.state.validPetCount,15);
+// Serialize/reload across days and time bands: only accepted pet events increment.
+for(let i=16;i<=51;i++){
+ state=JSON.parse(JSON.stringify(state));
+ result=advanceLetters(state,owned,'pet',base+i*86400_000,'normal',undefined,i%2?'night':'day');
+ assert.equal(result.state.validPetCount,i);assert.deepEqual(result.grants,i===50?['special_02']:[]);
+ if(i===49)assert(!result.owned.includes('special_02'));
+ state=result.state;owned=result.owned;
+ for(const action of ['load','interrupt','awake'] as const){const idle=advanceLetters(state,owned,action,base+i*86400_000);assert.equal(idle.state.validPetCount,i);assert.deepEqual(idle.grants,[]);}
+}
+result=advanceLetters({...emptyLetterState(),pet:{start:base-900000,counts:[5,5,5]}},[],'load',base);
+assert.deepEqual(result.grants,[]);assert.equal(result.state.pet,undefined);assert.equal(result.state.validPetCount,undefined);
+assert(advanceLetters(emptyLetterState(),['special_02'],'load',base).owned.includes('special_02'));
+
 const dawn=Date.parse('2026-09-21T19:00:00Z');state=emptyLetterState();
 for(let t=0;t<300000;t+=15000){result=advanceLetters(state,[],'sleep',dawn+t);assert.deepEqual(result.grants,[]);state=result.state;}
 result=advanceLetters(state,[],'sleep',dawn+300000);assert.deepEqual(result.grants,['special_03']);
@@ -48,4 +60,4 @@ assert(owned.includes('special_01'));
 state=advanceLetters(emptyLetterState(),['letter_21'],'drawer',base+10_000,'normal',undefined,undefined,base).state;
 assert.equal(advanceLetters(state,['letter_21'],'drawer',base+20_000,'normal',undefined,undefined,base+2001).state.drawer?.count,1);
 assert.equal(advanceLetters(state,['letter_21'],'drawer',base+20_000,'normal',undefined,undefined,base-1).state.drawer?.count,1);
-console.log('PASS: sequence, four KST band quotas, reread, migration, drawer (including queued clicks), 15-minute pet streak, uninterrupted dawn sleep, 31→32, mailbox and isolated VIP unlocks');
+console.log('PASS: sequence, four KST band quotas, reread, migration, drawer (including queued clicks), 50 lifetime valid pets, uninterrupted dawn sleep, 31→32, mailbox and isolated VIP unlocks');

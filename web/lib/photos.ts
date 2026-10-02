@@ -1,3 +1,4 @@
+import {hasAllRegularLetters} from './gifts.ts';
 import catalog from './photo-catalog.json' with {type:'json'};
 export type PhotoCategory='hug'|'food'|'outfit'|'window'|'happy';
 export type Photo={id:string;category:PhotoCategory;assetPath:string;title?:string;available:boolean};
@@ -6,7 +7,8 @@ export const PHOTO_RULES={globalDailyCap:10,caps:{hug:1,food:1,outfit:2,window:2
 export const PHOTO_REGISTRY:readonly Photo[]=catalog as Photo[];
 export const STANDARD_PHOTOS=PHOTO_REGISTRY.filter(p=>p.category!=='hug');
 export const standardPhotoCount=(ids:readonly string[])=>STANDARD_PHOTOS.filter(p=>ids.includes(p.id)).length;
-export const visiblePhotos=(ids:readonly string[],vip:boolean)=>[...STANDARD_PHOTOS,...(vip?ids.map(id=>PHOTO_REGISTRY.find(p=>p.id===id&&p.category==='hug')).filter((p):p is Photo=>!!p).filter((p,i,a)=>a.findIndex(v=>v.id===p.id)===i):[])];
+export const hugPhotosAvailable=(letters:readonly string[],vip:boolean,photos:readonly string[]=[],revealed=false)=>revealed||hasAllRegularLetters(letters)||(vip&&letters.includes('letter_22'))||photos.some(id=>PHOTO_REGISTRY.some(p=>p.id===id&&p.category==='hug'));
+export const visiblePhotos=(_ids:readonly string[],hugRevealed:boolean)=>hugRevealed?PHOTO_REGISTRY:STANDARD_PHOTOS;
 export const HUG_REACTIONS=['안아줘서 기분 좋다아!','(포옥...)','나 말랑하지이.'] as const;
 export type PhotoAction='pet'|'hug'|'food'|'wardrobe'|'drawer'|'window'|'tv'|'game'|'cushion'|'walk'|'idle'|'bath'|'sleep';
 export const PHOTO_ACTIONS:readonly PhotoAction[]=['pet','hug','food','wardrobe','drawer','window','tv','game','cushion','walk','idle','bath','sleep'];

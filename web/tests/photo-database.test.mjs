@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 const {PGlite}=await import(process.env.PHOTO_PGLITE_MODULE||'@electric-sql/pglite');
 const db=new PGlite();
 await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql as 'select null::uuid';create table public.profiles("userId" uuid primary key,nickname text,gender text,"birthYear" int);`);
-for(const file of ['20260915_progression.sql','20260917_reward_rules.sql','20260922_photo_album.sql','20260921_letter_story.sql','20260923_photo_props.sql','20260924_photo_first_click.sql'])await db.exec(await fs.readFile(new URL(`../supabase/migrations/${file}`,import.meta.url),'utf8'));
+for(const file of ['20260915_progression.sql','20260917_reward_rules.sql','20260922_photo_album.sql','20260921_letter_story.sql','20260923_photo_props.sql','20260924_photo_first_click.sql','20261002_endgame_hug.sql'])await db.exec(await fs.readFile(new URL(`../supabase/migrations/${file}`,import.meta.url),'utf8'));
 const u='00000000-0000-4000-8000-000000000b01',v='00000000-0000-4000-8000-000000000b02';
 await db.query('insert into auth.users values ($1),($2)',[u,v]);
 await db.query('insert into public.profiles values ($1,$2,$3,1991)',[v,'쭈인','female']);
@@ -67,6 +67,17 @@ assert.equal((await state(v)).heart_coin_balance,30,'reset isolated to account')
 await unthrottle(u);const retry=crypto.randomUUID(),before=(await state(u)).heart_coin_balance;
 await Promise.all([drop(u,'game',{happy:1},catalog,retry),drop(u,'game',{happy:1},catalog,retry)]);
 assert.equal((await state(u)).heart_coin_balance,before+30);
+// Normal users unlock hug after all 28, with identical probability and duplicate semantics.
+await db.query("update public.user_progression set collected_letter_ids=array(select 'letter_'||lpad(i::text,2,'0') from generate_series(1,28) i),daily_photo_total=10,daily_photo_category_counts='{}' where user_id=$1",[u]);
+assert.equal((await drop(u,'pet',{hug:0},single)).photoId,null);
+const unlocked=await drop(u,'pet',{hug:1},single);assert.equal(unlocked.photoId,'hug_01');assert.equal(unlocked.delta,30);
+assert.equal((await state(u)).daily_photo_total,10);
+assert.equal((await drop(u,'pet',{hug:1},single)).photoId,null);
+await db.query("update public.user_progression set progression_date=progression_date-1 where user_id=$1",[u]);
+assert.equal((await drop(u,'pet',{hug:1},single)).delta,0);
+// Reapplication is safe; persisted reveal survives later VIP profile changes.
+await db.exec(await fs.readFile(new URL('../supabase/migrations/20261002_endgame_hug.sql',import.meta.url),'utf8'));
+assert.equal((await state(u)).letter_state.hugRevealed,true);
 const saved=await db.dumpDataDir();await db.close();
 const reloaded=new PGlite({loadDataDir:saved});
 const persisted=(await reloaded.query('select collected_photo_ids,heart_coin_balance from public.user_progression where user_id=$1',[v])).rows[0];

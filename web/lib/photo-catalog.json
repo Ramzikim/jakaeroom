@@ -66,6 +66,24 @@
     "available": true
   },
   {
+    "id": "outfit_08",
+    "category": "outfit",
+    "assetPath": "/library/photo_framed/outfit/outfit_08.jpg",
+    "available": true
+  },
+  {
+    "id": "outfit_09",
+    "category": "outfit",
+    "assetPath": "/library/photo_framed/outfit/outfit_09.jpg",
+    "available": true
+  },
+  {
+    "id": "outfit_10",
+    "category": "outfit",
+    "assetPath": "/library/photo_framed/outfit/outfit_10.jpg",
+    "available": true
+  },
+  {
     "id": "window_01",
     "category": "window",
     "assetPath": "/library/photo_framed/window/photo_window_01.webp",
@@ -99,6 +117,12 @@
     "id": "window_06",
     "category": "window",
     "assetPath": "/library/photo_framed/window/photo_window_06.webp",
+    "available": true
+  },
+  {
+    "id": "window_07",
+    "category": "window",
+    "assetPath": "/library/photo_framed/window/window_07.jpg",
     "available": true
   },
   {
@@ -228,6 +252,12 @@
     "available": true
   },
   {
+    "id": "happy_22",
+    "category": "happy",
+    "assetPath": "/library/photo_framed/happy/happy_22.jpg",
+    "available": true
+  },
+  {
     "id": "hug_01",
     "category": "hug",
     "assetPath": "/library/photo_framed/hug/photo_hug_01-upright.webp",
@@ -255,6 +285,18 @@
     "id": "hug_05",
     "category": "hug",
     "assetPath": "/library/photo_framed/hug/photo_hug_05-upright.webp",
+    "available": true
+  },
+  {
+    "id": "hug_06",
+    "category": "hug",
+    "assetPath": "/library/photo_framed/hug/hug_06.jpg",
+    "available": true
+  },
+  {
+    "id": "hug_07",
+    "category": "hug",
+    "assetPath": "/library/photo_framed/hug/hug_07.jpg",
     "available": true
   }
 ]

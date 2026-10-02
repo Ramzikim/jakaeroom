@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {advanceLetters} from '../lib/letter-rules.ts';
 import {GIFT_REGISTRY,REGULAR_LETTER_IDS} from '../lib/gifts.ts';
 const {PGlite}=await import(process.env.PHOTO_PGLITE_MODULE||'@electric-sql/pglite');
 const db=new PGlite();
@@ -19,6 +20,7 @@ assert.equal((await mutate('add',30,'daily_login')).delta,30);
 assert.equal((await mutate('add',5,'interaction','original','pet')).delta,5);
 const old=await state();
 await migration('20260926_progression_latency');
+await migration('20261002_endgame_hug');
 assert.deepEqual((await state()).reward_receipts,{});
 assert.equal((await state()).heart_coin_balance,old.heart_coin_balance);
 assert.equal((await db.query('select count(*)::int n from public.progression_receipts')).rows[0].n,Object.keys(old.reward_receipts).length);
@@ -39,6 +41,14 @@ assert.equal((await purchase()).reason,'already_owned');assert.equal((await stat
 const letter=(await state()).letter_state;
 const commit=async()=>(await db.query('select public.commit_letter_event($1,$2,$3,$4,$5,$6) r',[user,letter.version,JSON.stringify(letter),['letter_01'],'letter-retry','letter_01'])).rows[0].r;
 assert.equal((await commit()).delta,20);const replay=await commit();assert.equal(replay.delta,0);assert.equal(replay.letterId,'letter_01');assert.equal(replay.duplicate,true);
+// Lifetime pet count uses the same account JSON/CAS and event receipt as letters.
+await db.query("update public.user_progression set letter_state=jsonb_set(letter_state,'{validPetCount}','49') where user_id=$1",[user]);
+const beforePet=await state(), nextPet=advanceLetters(beforePet.letter_state,beforePet.collected_letter_ids,'pet',Date.now());
+const commitPet=async()=>(await db.query('select public.commit_letter_event($1,$2,$3,$4,$5,$6) r',[user,beforePet.letter_state.version,JSON.stringify(nextPet.state),nextPet.grants,'pet-50',null])).rows[0].r;
+const pet50=await commitPet();assert.equal(pet50.delta,20);assert.equal(pet50.progression.letter_state.validPetCount,50);assert(pet50.progression.collected_letter_ids.includes('special_02'));
+const petReplay=await commitPet();assert.equal(petReplay.duplicate,true);assert.equal(petReplay.delta,0);assert.equal((await state()).letter_state.validPetCount,50);
+const reloaded=await state();assert.equal(advanceLetters(reloaded.letter_state,reloaded.collected_letter_ids,'load',Date.now()+86400_000).state.validPetCount,50);
+assert.deepEqual(advanceLetters(reloaded.letter_state,reloaded.collected_letter_ids,'pet',Date.now()+86400_000).grants,[]);
 const catalog=JSON.parse(await fs.readFile(new URL('../lib/photo-catalog.json',import.meta.url),'utf8'));
 const photoEvent=crypto.randomUUID();
 const photo=async()=>(await db.query("select public.acquire_photo_album($1,'wardrobe',$2,$3,$4) r",[user,photoEvent,JSON.stringify(catalog),JSON.stringify({outfit:0})])).rows[0].r;

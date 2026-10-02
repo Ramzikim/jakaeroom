@@ -18,6 +18,8 @@ import {AdminPanel,useAdminTools} from './admin-tools';
 import {HelpModal} from './help-modal';
 import {Bgm} from './bgm';
 import {authClient} from './auth-client';
+import {hasAllRegularLetters} from '../lib/gifts';
+import {LetterNoticePopup} from './letter-notice-popup';
 import {CollectionModal} from './collection-modal';
 import {playSfx,setSfxEnabled} from './sfx';
 
@@ -140,6 +142,8 @@ function Room(){
  const [counts,setCounts]=useState<LetterCounts>(()=>readCounts(null));
  const countRef=useRef(counts);
  const busy=['pet','berry','bath','rest','sleep'].includes(mood);
+ const regularComplete=hasAllRegularLetters(letterProgress.progression?.collected_letter_ids??letterCache.current?.collected??[]);
+ const completeMessage="작애가 준비한 일반 편지는 모두 받았어요.\n특별한 편지는 다른 방법으로 찾아보세요.";
  const limited=counts.date===kstDate()&&counts[admin.isAdmin?phase:now.period]>=2;
  const storeCounts=(next:LetterCounts)=>{countRef.current=next;setCounts(next);try{localStorage.setItem('jakae-letter-counts',JSON.stringify(next));}catch{}};
  useEffect(()=>{
@@ -202,11 +206,11 @@ function Room(){
   </section>
   <footer><div className="status" role="status"><span className="live-dot"/>{ready?names[mood]:'작애가 방을 치우고 있어요..'}</div><nav className="dock image-dock" aria-label="작애와 놀기">
    <button aria-label="쓰담쓰담" disabled={!ready||(busy&&mood!=='sleep')} onClick={()=>act('pet')}><img src="/btn_01.png" alt=""/></button>
-   <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={limited||(!letterProgress.progression&&!guestLetterReady)} title={limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
+   <button data-collection-ui aria-label="작애의 편지 받기" ref={letterButton} disabled={regularComplete||limited||(!letterProgress.progression&&!guestLetterReady)} title={regularComplete?completeMessage:limited?'이번 시간대 편지 2개를 모두 받았어요.':undefined} onClick={()=>void openLetter()}><img src="/btn_02.png?v=menu-v2" alt=""/></button>
    <PlayMenu disabled={!ready||busy} onAction={act}/>
    <button aria-label="도감 보기" onClick={openCollection}><img src="/btn_04.png?v=menu-v2" alt=""/></button>
-  </nav><div className="action-extras">{limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
-  <ArtworkPopup index={artworkOpen} onClose={()=>setArtworkOpen(null)}/><PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
+  </nav><div className="action-extras">{regularComplete&&<span role="status" style={{whiteSpace:'pre-line'}}>{completeMessage}</span>}{!regularComplete&&limited&&<span role="status">이번 시간대 편지 2개를 모두 받았어요.</span>}<AdminPanel admin={admin}/></div>{process.env.NODE_ENV==='development'&&!admin.isAdmin&&<div className="lighting-test" aria-label="라이팅 테스트"><span>라이팅 테스트</span><button aria-pressed={!override} onClick={()=>setOverride(null)}>KST 자동</button>{Object.entries(atmospheres).map(([key,value])=><button key={key} aria-pressed={override===key} onClick={()=>setOverride(key as keyof typeof atmospheres)}>{value.name}</button>)}</div>}</footer>
+  <LetterNoticePopup onRead={openLetter}/><ArtworkPopup index={artworkOpen} onClose={()=>setArtworkOpen(null)}/><PropMessage/><CollectionModal open={collectionOpen} onClose={()=>setCollectionOpen(false)} onRead={openLetter}/>
   <dialog ref={dialog} data-collection-ui className="letter" onClose={()=>{letterView.current++;(letterReturnFocus.current??letterButton.current)?.focus();}} onClick={e=>{if(e.target===dialog.current)dialog.current?.close();}}><button className="close" aria-label="편지 닫기" onClick={()=>dialog.current?.close()}>×</button><span className="letter-stamp">🍓</span><p className="eyebrow">A LITTLE LETTER FOR YOU</p><h2>{letter.title}</h2><p className="letter-body">{dialogue(letter.body)}</p>{letterError&&<p role="alert">{letterError}</p>}<p className="signature">네 친구, 작애가 ♡</p><button className="letter-done" onClick={()=>dialog.current?.close()}>닫기</button></dialog>
  </main>;
 }

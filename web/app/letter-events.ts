@@ -4,6 +4,7 @@ import {authClient} from './auth-client';
 import {publishCoins,queueCoinOperation,type CoinOrigin} from './coin-events';
 import {advanceLetters,emptyLetterState,type LetterAction,type LetterState} from '../lib/letter-rules';
 import type {LetterResult} from '../lib/server/letters';
+import {publishLetterAcquisitions} from './letter-notices';
 import {readCounts} from './behavior';
 export type LetterEventResult={userId:string|null;letterId:string|null;reason?:string|null;state:LetterState;collected:string[]};
 export async function requestLetterEvent(action:LetterAction,letterId?:string,origin?:CoinOrigin,retryEventId?:string):Promise<LetterEventResult|null>{
@@ -22,6 +23,7 @@ export async function requestLetterEvent(action:LetterAction,letterId?:string,or
   const current=(await withTimeout(client!.auth.getSession())).data.session;if(current?.user.id!==session.user.id)return;
   const result=await requestJson<LetterResult>('/api/letters',{method:'POST',headers:{Authorization:`Bearer ${current.access_token}`,'Content-Type':'application/json'},body:JSON.stringify({action,eventId,letterId,...(action==='drawer'?{clickedAt}:{})})});
   if((await withTimeout(client!.auth.getSession())).data.session?.user.id!==session.user.id)return;
+  publishLetterAcquisitions(session.user.id,eventId,result.grantedIds??[]);
   publishCoins({userId:session.user.id,result,kind:action==='regular'?'letter':'special_letter',origin});
   output={userId:session.user.id,letterId:result.letterId,reason:result.reason,state:result.progression.letter_state!,collected:result.progression.collected_letter_ids};
  });

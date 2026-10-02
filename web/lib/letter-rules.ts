@@ -5,7 +5,7 @@ import {kst} from '../app/life.ts';
 import {kstDate} from '../app/behavior.ts';
 
 export type LetterAction='load'|'regular'|'reread'|'drawer'|'interrupt'|'pet'|'sleep'|'sleep_end'|'awake';
-export type LetterState={version:number;date:string;counts:Partial<Record<Band,number>>;drawer?:{count:number;at:number};pet?:{start:number;counts:number[]};sleep?:{start:number;at:number};vipIds:string[]};
+export type LetterState={version:number;date:string;counts:Partial<Record<Band,number>>;drawer?:{count:number;at:number};pet?:{start:number;counts:number[]};validPetCount?:number;sleep?:{start:number;at:number};hugRevealed?:boolean;vipIds:string[]};
 export const emptyLetterState=():LetterState=>({version:0,date:'',counts:{},vipIds:[]});
 export function normalizeLetterIds(ids:readonly string[]){return [...new Set(ids.map(id=>{const i=legacyLetterIds.indexOf(id);return i<0?id:letters[i].id;}))];}
 export function letterClock(now:number){const date=new Date(now);return {date:kstDate(date),band:kst(date).period};}
@@ -30,19 +30,16 @@ export function advanceLetters(previous:LetterState,collected:readonly string[],
   if(!owned.includes('letter_21')||owned.includes('special_01'))delete state.drawer;
   else{const old=state.drawer;state.drawer={count:old&&drawerClickedAt>=old.at&&drawerClickedAt-old.at<=2000?old.count+1:1,at:drawerClickedAt};if(state.drawer.count>=10){grant('special_01');delete state.drawer;}}
  }
- if(!owned.includes('special_02')){
-  const pet=state.pet;
-  if(pet){const window=Math.floor((now-pet.start)/300_000),completed=Math.min(window,3);
-   if(pet.counts.slice(0,completed).some(n=>n<5)||pet.counts.length<completed)delete state.pet;
-   else if(window>=3){grant('special_02');delete state.pet;}
-  }
-  if(action==='pet'&&!owned.includes('special_02')){state.pet??={start:now,counts:[0,0,0]};const i=Math.floor((now-state.pet.start)/300_000);state.pet.counts[i]=(state.pet.counts[i]??0)+1;}
- }
+ // Legacy window progress is not a lifetime count and must never unlock a letter.
+ delete state.pet;
+ if(action==='pet')state.validPetCount=(state.validPetCount??0)+1;
+ if((state.validPetCount??0)>=50)grant('special_02');
  if(action==='sleep'&&clock.band==='dawn'&&!owned.includes('special_03')){
   if(!state.sleep||now-state.sleep.at>45_000)state.sleep={start:now,at:now};
   state.sleep.at=now;if(now-state.sleep.start>=300_000){grant('special_03');delete state.sleep;}
  }else if(action==='sleep')delete state.sleep;
  if(FINAL_LETTER_PREREQUISITES.every(id=>owned.includes(id)))grant('special_04');
  if(owned.includes('letter_28')&&tier!=='normal'&&state.vipIds.length===0)state.vipIds.push(tier);
+ if(letters.every(l=>owned.includes(l.id))||(tier!=='normal'&&owned.includes('letter_22')))state.hugRevealed=true;
  return {state,owned,grants,letterId,reason};
 }

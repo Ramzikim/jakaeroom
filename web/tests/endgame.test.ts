@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {letters,specialLetters,vipLetters} from '../app/letters.ts';
+import {interpolateDialogue} from '../app/profile.ts';
+import {hasAllRegularLetters} from '../lib/gifts.ts';
+import {hugPhotosAvailable,visiblePhotos,PHOTO_REGISTRY,PHOTO_RULES} from '../lib/photos.ts';
+import {SPECIAL_HINTS} from '../app/collection-letters.ts';
+import {advanceLetters,emptyLetterState} from '../lib/letter-rules.ts';
+import {publishLetterAcquisitions,subscribeLetterNotices} from '../app/letter-notices.ts';
+const all=letters.map(l=>l.id),before=all.slice(0,27);
+assert(!hasAllRegularLetters(before));assert(hasAllRegularLetters(all));
+assert(!hugPhotosAvailable(before,false));assert(hugPhotosAvailable(all,false));
+assert(!hugPhotosAvailable([],true));assert(hugPhotosAvailable(['letter_22'],true));
+assert(hugPhotosAvailable([],false,[],true));assert(hugPhotosAvailable([],false,['hug_01']));
+assert.equal(visiblePhotos([],false).length,43);assert.equal(visiblePhotos([],true).length,50);
+assert.deepEqual(Object.fromEntries(['food','outfit','window','happy','hug'].map(c=>[c,PHOTO_REGISTRY.filter(p=>p.category===c).length])),{food:4,outfit:10,window:7,happy:22,hug:7});
+assert.equal(PHOTO_RULES.chance.hug,.35);
+for(const letter of [...letters,...specialLetters,...vipLetters]){
+ assert(letter.body.includes('\n\n'));assert(!letter.body.includes('\\n'));
+ const rendered=interpolateDialogue(letter.body,null);
+ assert.equal(rendered.split('\n').length,letter.body.split('\n').length,letter.id);
+ const reread=advanceLetters({...emptyLetterState(),vipIds:vipLetters.map(l=>l.id)},[letter.id],'reread',Date.now(),'normal',letter.id);
+ assert.equal(reread.letterId,letter.id);assert.deepEqual(reread.grants,[]);
+}
+const completed=advanceLetters(emptyLetterState(),before,'regular',Date.now());assert.equal(completed.letterId,'letter_28');assert(completed.state.hugRevealed);
+assert.equal(advanceLetters(completed.state,all,'regular',Date.now()).reason,'complete');
+const persisted=advanceLetters({...emptyLetterState(),hugRevealed:true},[],'load',Date.now());assert(persisted.state.hugRevealed);
+assert.deepEqual(Object.keys(SPECIAL_HINTS),specialLetters.map(l=>l.id));
+const notices:string[]=[];const stop=subscribeLetterNotices(n=>notices.push(n.letterId));
+publishLetterAcquisitions('a','event',['letter_28','special_04','vip_owner']);publishLetterAcquisitions('a','event',['letter_28','special_04']);publishLetterAcquisitions('a','load',[]);stop();assert.deepEqual(notices,['letter_28','special_04']);
+const css=fs.readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');assert.match(css,/\.letter-body\{[^}]*white-space:pre-wrap/);
+console.log('PASS: all 35 letter newlines/rereads, 28 completion, persistent hug reveal, 50 photos, hints and acquisition notice dedupe');

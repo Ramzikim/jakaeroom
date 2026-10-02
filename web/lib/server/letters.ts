@@ -6,7 +6,7 @@ import {hasAllRegularLetters} from '../gifts';
 import {progressionFor} from './progression';
 import {giftsFor} from './gifts';
 import type {ProgressionResult} from '../progression';
-export type LetterResult=ProgressionResult & {letterId:string|null;reason?:string|null;duplicate?:boolean};
+export type LetterResult=ProgressionResult & {letterId:string|null;reason?:string|null;duplicate?:boolean;grantedIds?:string[]};
 // userId must come from auth.getUser, never from request JSON.
 export async function letterEvent(userId:string,action:LetterAction,eventId:string,rereadId?:string,clickedAt?:number):Promise<LetterResult>{
  const db=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.SUPABASE_SERVICE_ROLE_KEY!,{auth:{persistSession:false,autoRefreshToken:false}});
@@ -30,7 +30,7 @@ export async function letterEvent(userId:string,action:LetterAction,eventId:stri
   if(hasAllRegularLetters(result.progression.collected_letter_ids)&&!result.progression.owned_gift_ids.includes('starlight_mailbox')){
    const gift=await giftsFor(userId).evaluateLetterCompletionGift();if(!gift.ok)throw Error('Letter completion gift unavailable');result.progression.owned_gift_ids=gift.ownedGiftIds;
   }
-  return {...result,reason:result.duplicate?null:next.reason};
+  return {...result,grantedIds:result.duplicate?[]:next.grants,reason:result.duplicate?null:next.reason};
  }
  throw Error('Concurrent letter update; retry with the same event ID');
 }

@@ -49,7 +49,7 @@ body,button,select,input,textarea{font-family:Paperlogy,'Malgun Gothic',sans-ser
 .image-dock img{display:block;width:154px;max-width:23.1vw;height:auto}.dock.image-dock button:disabled{opacity:.5;filter:grayscale(.6)}
 .view-controls.image-controls button,.view-controls.image-controls button:hover{background:none;border:0;box-shadow:none;padding:0;border-radius:20px}.image-controls img{display:block;width:75px;height:auto}
 .action-extras{display:flex;align-items:center;justify-content:center;gap:12px;margin:7px 0;font-size:13px}.action-extras button{border:1px solid #d8c4b0;border-radius:14px;padding:5px 10px;background:#fff7ec;font-size:13px}.action-extras span{color:#76594b}
-.letter{background:repeating-linear-gradient(#fffcf5 0px,#fffcf5 31px,#f1eade 32px)}.letter-body{color:#47423f}
+.letter{background:repeating-linear-gradient(#fffcf5 0px,#fffcf5 31px,#f1eade 32px)}.letter-body{color:#47423f;white-space:pre-wrap}
 .wordmark{transform:translateY(15px)}.image-title img{width:253px;max-width:52.8vw}
 .clock{font-size:15px}.clock time{font-size:16px}.clock small{font-size:12px}
 @media(max-width:600px){.image-title img{width:192.5px}.clock{font-size:12px}.clock time{font-size:14px}.image-controls img{width:58px}.image-dock img{width:110%;max-width:24.2vw}.dock.image-dock{gap:0}.dock.image-dock button+button{margin-left:-2px}.action-extras{font-size:12px;gap:8px}}
