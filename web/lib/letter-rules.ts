@@ -33,7 +33,7 @@ export function advanceLetters(previous:LetterState,collected:readonly string[],
  // Legacy window progress is not a lifetime count and must never unlock a letter.
  delete state.pet;
  if(action==='pet')state.validPetCount=(state.validPetCount??0)+1;
- if((state.validPetCount??0)>=50)grant('special_02');
+ if((state.validPetCount??0)>=40)grant('special_02');
  if(action==='sleep'&&clock.band==='dawn'&&!owned.includes('special_03')){
   if(!state.sleep||now-state.sleep.at>45_000)state.sleep={start:now,at:now};
   state.sleep.at=now;if(now-state.sleep.start>=300_000){grant('special_03');delete state.sleep;}
